@@ -1,0 +1,18 @@
+{
+    "mainDrawerItems": [
+      {
+        "label": "Project Explorer",
+        "icon": "AccountTreeRounded"
+      },
+      {
+        "label": "Kinematic Property",
+        "icon": "PrecisionManufacturingRounded"
+      },
+      {
+        "label": "JOG Controls",
+        "icon": "TuneRounded"
+      }
+  
+    ]
+  }
+  
