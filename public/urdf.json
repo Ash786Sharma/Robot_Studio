@@ -1,0 +1,1637 @@
+{
+    "_declaration": {
+        "_attributes": {
+            "version": "1.0"
+        }
+    },
+    "robot": {
+        "_attributes": {
+            "name": "UR3"
+        },
+        "link": [
+            {
+                "_attributes": {
+                    "name": "robot_base"
+                },
+                "collision": {
+                    "_attributes": {
+                        "name": "UR3"
+                    },
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "-0.000000 -0.000000 -0.000000",
+                            "rpy": "-3.141593 3.141593 -3.141593"
+                        }
+                    },
+                    "geometry": {
+                        "mesh": {
+                            "_attributes": {
+                                "filename": "../urdf_ur3/ur3_robot_base_coll_1.dae"
+                            }
+                        }
+                    }
+                },
+                "visual": [
+                    {
+                        "_attributes": {
+                            "name": "link1_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000000 -0.000000 -0.000000",
+                                "rpy": "-3.141593 3.141593 -3.141593"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link1_visible_vis_1.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link1_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.870588 0.870588 0.870588 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link1_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000000 -0.000000 -0.000000",
+                                "rpy": "-3.141593 3.141593 -3.141593"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link1_visible_vis_2.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link1_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "_attributes": {
+                    "name": "link"
+                },
+                "inertial": {
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "0.000004 0.006743 0.145671",
+                            "rpy": "-3.141593 3.141593 1.570796"
+                        }
+                    },
+                    "inertia": {
+                        "_attributes": {
+                            "iyy": "0.01409502211253",
+                            "ixz": "0.00033951027518348",
+                            "iyz": "1.1680027939965e-06",
+                            "izz": "0.0099350964551032",
+                            "ixy": "2.844135051548e-09",
+                            "ixx": "0.013322851015861"
+                        }
+                    },
+                    "mass": {
+                        "_attributes": {
+                            "value": "1.0"
+                        }
+                    }
+                },
+                "collision": {
+                    "_attributes": {
+                        "name": "link"
+                    },
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "0.000000 0.000000 0.000000",
+                            "rpy": "3.141593 3.141593 -0.000000"
+                        }
+                    },
+                    "geometry": {
+                        "mesh": {
+                            "_attributes": {
+                                "filename": "../urdf_ur3/ur3_link_coll_1.dae"
+                            }
+                        }
+                    }
+                },
+                "visual": [
+                    {
+                        "_attributes": {
+                            "name": "link2_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "0.000000 0.000000 0.000000",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link2_visible_vis_1.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link2_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link2_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "0.000000 0.000000 0.000000",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link2_visible_vis_2.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link2_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.508235 0.761224 0.903529 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link2_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "0.000000 0.000000 0.000000",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link2_visible_vis_3.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link2_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link2_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "0.000000 0.000000 0.000000",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link2_visible_vis_4.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link2_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "_attributes": {
+                    "name": "link_2"
+                },
+                "inertial": {
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "0.000069 -0.108116 0.006647",
+                            "rpy": "1.570796 1.570796 0.000000"
+                        }
+                    },
+                    "inertia": {
+                        "_attributes": {
+                            "iyy": "0.18813148649674",
+                            "ixz": "0.0079891854119392",
+                            "iyz": "4.695736461373e-05",
+                            "izz": "0.03454149621641",
+                            "ixy": "1.4690480381395e-05",
+                            "ixx": "0.17734117337558"
+                        }
+                    },
+                    "mass": {
+                        "_attributes": {
+                            "value": "2.5"
+                        }
+                    }
+                },
+                "collision": [
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_2_coll_1.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_2_coll_2.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_2_coll_3.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_2_coll_4.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_2_coll_5.dae"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "visual": [
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_1.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.870588 0.870588 0.870588 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_2.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_3.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_4.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_5.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_6.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_7.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.508235 0.761224 0.903529 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_8.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_9.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link3_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000054 0.151899 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link3_visible_vis_10.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link3_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.508235 0.761224 0.903529 1.0"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "_attributes": {
+                    "name": "link_3"
+                },
+                "inertial": {
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "-0.000100 -0.117175 -0.077228",
+                            "rpy": "1.570796 1.570796 0.000000"
+                        }
+                    },
+                    "inertia": {
+                        "_attributes": {
+                            "iyy": "0.12850853130719",
+                            "ixz": "-0.0073093291977017",
+                            "iyz": "-2.1974749022959e-05",
+                            "izz": "0.019407330650231",
+                            "ixy": "-2.2961357759829e-05",
+                            "ixx": "0.12383162690089"
+                        }
+                    },
+                    "mass": {
+                        "_attributes": {
+                            "value": "2.5"
+                        }
+                    }
+                },
+                "collision": [
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_3_coll_1.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_3_coll_2.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_3_coll_3.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_3_coll_4.dae"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link_3_coll_5.dae"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "visual": [
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_1.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.870588 0.870588 0.870588 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_2.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_3.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_4.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_5.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_6.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.508235 0.761224 0.903529 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_7.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_8.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link4_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000130 0.395549 -0.111541",
+                                "rpy": "1.570795 3.141593 0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link4_visible_vis_9.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link4_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "_attributes": {
+                    "name": "link_4"
+                },
+                "inertial": {
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "-0.000063 -0.002676 -0.002551",
+                            "rpy": "1.570796 1.570796 0.000000"
+                        }
+                    },
+                    "inertia": {
+                        "_attributes": {
+                            "iyy": "0.0076237864851809",
+                            "ixz": "4.4444737658457e-05",
+                            "iyz": "1.9329876560889e-05",
+                            "izz": "0.0046337627007229",
+                            "ixy": "-1.3022311240541e-06",
+                            "ixx": "0.0074607414118797"
+                        }
+                    },
+                    "mass": {
+                        "_attributes": {
+                            "value": "1.0"
+                        }
+                    }
+                },
+                "collision": {
+                    "_attributes": {
+                        "name": "link"
+                    },
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "-0.000085 0.608799 -0.111541",
+                            "rpy": "1.570796 3.141593 -0.000000"
+                        }
+                    },
+                    "geometry": {
+                        "mesh": {
+                            "_attributes": {
+                                "filename": "../urdf_ur3/ur3_link_4_coll_1.dae"
+                            }
+                        }
+                    }
+                },
+                "visual": [
+                    {
+                        "_attributes": {
+                            "name": "link5_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 0.608799 -0.111541",
+                                "rpy": "1.570796 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link5_visible_vis_1.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link5_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link5_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 0.608799 -0.111541",
+                                "rpy": "1.570796 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link5_visible_vis_2.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link5_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link5_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 0.608799 -0.111541",
+                                "rpy": "1.570796 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link5_visible_vis_3.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link5_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.508235 0.761224 0.903529 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link5_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 0.608799 -0.111541",
+                                "rpy": "1.570796 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link5_visible_vis_4.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link5_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "_attributes": {
+                    "name": "link_5"
+                },
+                "inertial": {
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "0.000520 0.003355 -0.001879",
+                            "rpy": "-3.141593 3.141593 1.570796"
+                        }
+                    },
+                    "inertia": {
+                        "_attributes": {
+                            "iyy": "0.0077851674584931",
+                            "ixz": "7.4333852122585e-05",
+                            "iyz": "-2.5701652848516e-06",
+                            "izz": "0.0076031188661991",
+                            "ixy": "1.0248622227352e-05",
+                            "ixx": "0.0046708090457454"
+                        }
+                    },
+                    "mass": {
+                        "_attributes": {
+                            "value": "1.0"
+                        }
+                    }
+                },
+                "collision": {
+                    "_attributes": {
+                        "name": "link"
+                    },
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "-0.000085 -0.112225 -0.693017",
+                            "rpy": "3.141593 3.141593 -0.000000"
+                        }
+                    },
+                    "geometry": {
+                        "mesh": {
+                            "_attributes": {
+                                "filename": "../urdf_ur3/ur3_link_5_coll_1.dae"
+                            }
+                        }
+                    }
+                },
+                "visual": [
+                    {
+                        "_attributes": {
+                            "name": "link6_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 -0.112225 -0.693017",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link6_visible_vis_1.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link6_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link6_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 -0.112225 -0.693017",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link6_visible_vis_2.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link6_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.535294 0.535294 0.535294 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link6_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 -0.112225 -0.693017",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link6_visible_vis_3.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link6_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.508235 0.761224 0.903529 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link6_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 -0.112225 -0.693017",
+                                "rpy": "3.141593 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link6_visible_vis_4.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link6_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.282353 0.282353 0.282353 1.0"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                "_attributes": {
+                    "name": "link_6"
+                },
+                "collision": {
+                    "_attributes": {
+                        "name": "link"
+                    },
+                    "origin": {
+                        "_attributes": {
+                            "xyz": "0.000095 -0.000194 0.066355",
+                            "rpy": "-0.000000 3.141593 -3.141593"
+                        }
+                    },
+                    "geometry": {
+                        "cylinder": {
+                            "_attributes": {
+                                "radius": "0.03120630979538",
+                                "length": "0.032068222761154"
+                            }
+                        }
+                    }
+                },
+                "visual": [
+                    {
+                        "_attributes": {
+                            "name": "link7_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 0.694149 -0.111541",
+                                "rpy": "1.570796 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link7_visible_vis_1.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link7_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.870588 0.870588 0.870588 1.0"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "_attributes": {
+                            "name": "link7_visible"
+                        },
+                        "origin": {
+                            "_attributes": {
+                                "xyz": "-0.000085 0.694149 -0.111541",
+                                "rpy": "1.570796 3.141593 -0.000000"
+                            }
+                        },
+                        "geometry": {
+                            "mesh": {
+                                "_attributes": {
+                                    "filename": "../urdf_ur3/ur3_link7_visible_vis_2.dae"
+                                }
+                            }
+                        },
+                        "material": {
+                            "_attributes": {
+                                "name": "link7_visible_material"
+                            },
+                            "color": {
+                                "_attributes": {
+                                    "rgba": "0.870588 0.870588 0.870588 1.0"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        ],
+        "joint": [
+            {
+                "_attributes": {
+                    "name": "joint1",
+                    "type": "revolute"
+                },
+                "axis": {
+                    "_attributes": {
+                        "xyz": "0 0 1"
+                    }
+                },
+                "limit": {
+                    "_attributes": {
+                        "upper": "6.2831854820251",
+                        "lower": "-6.2831854820251",
+                        "effort": "50.0",
+                        "velocity": "3.1415927410126"
+                    }
+                },
+                "parent": {
+                    "_attributes": {
+                        "link": "robot_base"
+                    }
+                },
+                "child": {
+                    "_attributes": {
+                        "link": "link"
+                    }
+                },
+                "origin": {
+                    "_attributes": {
+                        "xyz": "0.000000 0.000000 0.000000",
+                        "rpy": "-3.141593 3.141593 0.000000"
+                    }
+                }
+            },
+            {
+                "_attributes": {
+                    "name": "joint2",
+                    "type": "revolute"
+                },
+                "axis": {
+                    "_attributes": {
+                        "xyz": "0 0 1"
+                    }
+                },
+                "limit": {
+                    "_attributes": {
+                        "upper": "6.2831854820251",
+                        "lower": "-6.2831854820251",
+                        "effort": "50.0",
+                        "velocity": "3.1415927410126"
+                    }
+                },
+                "parent": {
+                    "_attributes": {
+                        "link": "link"
+                    }
+                },
+                "child": {
+                    "_attributes": {
+                        "link": "link_2"
+                    }
+                },
+                "origin": {
+                    "_attributes": {
+                        "xyz": "0.000054 0.111541 0.151899",
+                        "rpy": "1.570795 3.141593 -3.141593"
+                    }
+                }
+            },
+            {
+                "_attributes": {
+                    "name": "joint3",
+                    "type": "revolute"
+                },
+                "axis": {
+                    "_attributes": {
+                        "xyz": "0 0 1"
+                    }
+                },
+                "limit": {
+                    "_attributes": {
+                        "upper": "6.2831854820251",
+                        "lower": "-6.2831854820251",
+                        "effort": "50.0",
+                        "velocity": "3.1415927410126"
+                    }
+                },
+                "parent": {
+                    "_attributes": {
+                        "link": "link_2"
+                    }
+                },
+                "child": {
+                    "_attributes": {
+                        "link": "link_3"
+                    }
+                },
+                "origin": {
+                    "_attributes": {
+                        "xyz": "0.000076 -0.243650 -0.000000",
+                        "rpy": "-3.141593 3.141593 -3.141593"
+                    }
+                }
+            },
+            {
+                "_attributes": {
+                    "name": "joint4",
+                    "type": "revolute"
+                },
+                "axis": {
+                    "_attributes": {
+                        "xyz": "0 0 1"
+                    }
+                },
+                "limit": {
+                    "_attributes": {
+                        "upper": "6.2831854820251",
+                        "lower": "-6.2831854820251",
+                        "effort": "50.0",
+                        "velocity": "6.2831854820251"
+                    }
+                },
+                "parent": {
+                    "_attributes": {
+                        "link": "link_3"
+                    }
+                },
+                "child": {
+                    "_attributes": {
+                        "link": "link_4"
+                    }
+                },
+                "origin": {
+                    "_attributes": {
+                        "xyz": "-0.000045 -0.213250 -0.000001",
+                        "rpy": "-3.141591 3.141593 3.141593"
+                    }
+                }
+            },
+            {
+                "_attributes": {
+                    "name": "joint5",
+                    "type": "revolute"
+                },
+                "axis": {
+                    "_attributes": {
+                        "xyz": "0 0 1"
+                    }
+                },
+                "limit": {
+                    "_attributes": {
+                        "upper": "6.2831854820251",
+                        "lower": "-6.2831854820251",
+                        "effort": "50.0",
+                        "velocity": "6.2831854820251"
+                    }
+                },
+                "parent": {
+                    "_attributes": {
+                        "link": "link_4"
+                    }
+                },
+                "child": {
+                    "_attributes": {
+                        "link": "link_5"
+                    }
+                },
+                "origin": {
+                    "_attributes": {
+                        "xyz": "-0.000000 -0.084218 0.000684",
+                        "rpy": "-1.570796 3.141593 -3.141593"
+                    }
+                }
+            },
+            {
+                "_attributes": {
+                    "name": "joint6",
+                    "type": "continuous"
+                },
+                "axis": {
+                    "_attributes": {
+                        "xyz": "0 0 1"
+                    }
+                },
+                "parent": {
+                    "_attributes": {
+                        "link": "link_5"
+                    }
+                },
+                "child": {
+                    "_attributes": {
+                        "link": "link_6"
+                    }
+                },
+                "origin": {
+                    "_attributes": {
+                        "xyz": "-0.000000 -0.000684 0.001132",
+                        "rpy": "1.570796 3.141593 -3.141593"
+                    }
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,67 @@
+{
+  "menuItems": [
+    {
+      "label": "File",
+      "icon": "TopicRounded",
+      "submenu": [
+        { "label": "Create Project",
+        "icon": "BorderColorRounded" },
+        { "label": "Open Project",
+        "icon": "FileOpenRounded" },
+        {"label": "Save Project",
+        "icon": "SaveRounded"},
+        {"label": "Import URDF",
+        "icon": "KeyboardDoubleArrowLeftRounded"},
+        { "label": "Export URDF",
+        "icon": "KeyboardDoubleArrowRightRounded" },
+        { "label": "Close Project",
+        "icon": "CloseRounded" }
+      ]
+    },
+    {
+      "label": "Edit",
+      "icon": "EditRounded",
+      "submenu": [
+        { "label": "Undo" ,
+        "icon": "UndoRounded"},
+        { "label": "Redo" ,
+        "icon": "RedoRounded"}
+      ]
+    },
+    {
+      "label": "view",
+      "icon": "ViewQuiltRounded",
+      "submenu": [
+        { "label": "Project Explorer",
+        "icon": "AccountTreeRounded" },
+        { "label": "Terminal", 
+        "icon": "TerminalRounded" },
+        { "label": "3D Editor",
+        "icon": "ViewInArRounded" }
+      ]
+    },
+    {
+      "label": "Options",
+      "icon": "TuneRounded",
+      "submenu": [
+        { "label": "Project Explorer",
+        "icon": "AttachFileRounded" },
+        { "label": "Terminal",
+        "icon": "AttachFileRounded" },
+        { "label": "3D Editor",
+        "icon": "AttachFileRounded" }
+      ]
+    },
+    {
+      "label": "Help",
+      "icon": "QuestionMarkRounded",
+      "submenu": [
+        { "label": "About",
+        "icon": "InfoRounded" },
+        { "label": "Help",
+        "icon": "LiveHelpRounded" }
+      ]
+    }
+
+  ]
+}

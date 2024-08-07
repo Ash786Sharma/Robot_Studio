@@ -1,0 +1,66 @@
+{
+    "toolItems": [
+      {
+        "label": "Create Project",
+        "icon": "BorderColorRounded"
+      },
+      {
+        "label": "Open Project",
+        "icon": "FileOpenRounded"
+      },
+      {
+        "label": "Rename",
+        "icon": "RestorePageRounded"
+      },
+      {
+        "label": "Save Project",
+        "icon": "SaveRounded"
+      },
+      {
+        "label": "Delete",
+        "icon": "DeleteForeverRounded"
+      },
+      {
+        "label": "Import URDF",
+        "icon": "KeyboardDoubleArrowLeftRounded"
+      },
+      {
+        "label": "Export URDF",
+        "icon": "KeyboardDoubleArrowRightRounded"
+      },
+      {
+        "label": "Close Project",
+        "icon": "CloseRounded"
+      },
+      {
+        "label": "Copy",
+      "icon": "CopyAllRounded"
+      },
+      {
+        "label": "Cut",
+        "icon": "ContentCutRounded"
+      },
+      {
+        "label": "Paste",
+        "icon": "ContentPasteRounded"
+      },
+      {
+        "label": "Undo" ,
+        "icon": "UndoRounded"
+      },
+      {
+        "label": "Redo" ,
+        "icon": "RedoRounded"
+      },
+      {
+        "label": "Options",
+        "icon": "TuneRounded"
+      },
+      {
+        "label": "Help",
+        "icon": "QuestionMarkRounded"
+      }
+  
+    ]
+  }
+  

@@ -1,0 +1,78 @@
+
+  {
+      "id": "link_robot_base",
+      "label": "robot_base",
+      "children": [
+          {
+              "id": "joint_joint1",
+              "label": "joint1",
+              "children": [
+                  {
+                      "id": "link_link",
+                      "label": "link",
+                      "children": [
+                          {
+                              "id": "joint_joint2",
+                              "label": "joint2",
+                              "children": [
+                                  {
+                                      "id": "link_link_2",
+                                      "label": "link_2",
+                                      "children": [
+                                          {
+                                              "id": "joint_joint3",
+                                              "label": "joint3",
+                                              "children": [
+                                                  {
+                                                      "id": "link_link_3",
+                                                      "label": "link_3",
+                                                      "children": [
+                                                          {
+                                                              "id": "joint_joint4",
+                                                              "label": "joint4",
+                                                              "children": [
+                                                                  {
+                                                                      "id": "link_link_4",
+                                                                      "label": "link_4",
+                                                                      "children": [
+                                                                          {
+                                                                              "id": "joint_joint5",
+                                                                              "label": "joint5",
+                                                                              "children": [
+                                                                                  {
+                                                                                      "id": "link_link_5",
+                                                                                      "label": "link_5",
+                                                                                      "children": [
+                                                                                          {
+                                                                                              "id": "joint_joint6",
+                                                                                              "label": "joint6",
+                                                                                              "children": [
+                                                                                                  {
+                                                                                                      "id": "link_link_6",
+                                                                                                      "label": "link_6",
+                                                                                                      "children": []
+                                                                                                  }
+                                                                                              ]
+                                                                                          }
+                                                                                      ]
+                                                                                  }
+                                                                              ]
+                                                                          }
+                                                                      ]
+                                                                  }
+                                                              ]
+                                                          }
+                                                      ]
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ]
+          }
+      ]
+  }
