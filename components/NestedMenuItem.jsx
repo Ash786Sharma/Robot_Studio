@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import * as Icons from '@mui/icons-material';
+import React, { useState } from "react";
+import { Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
+import * as Icons from "@mui/icons-material";
 
 const NestedMenuItem = ({ menuItem, parentHandleClose, onMenuItemClick }) => {
   const [submenuAnchorEl, setSubmenuAnchorEl] = useState(null);
@@ -30,12 +30,12 @@ const NestedMenuItem = ({ menuItem, parentHandleClose, onMenuItemClick }) => {
         onClick={handleClick}
       >
         {IconComponent && (
-          <ListItemIcon className="mr-0" sx={{ minWidth: 0 }}>
-            <IconComponent sx={{ margin: 0}}/>
+          <ListItemIcon sx={{ minWidth: 0, color: "inherit", mr: 0 }}>
+            <IconComponent sx={{ margin: 0 }} />
           </ListItemIcon>
         )}
         <ListItemText primary={menuItem.label} sx={{ margin: 0 }} />
-        {menuItem.submenu && <span style={{ marginLeft: 'auto' }}>▶</span>}
+        {menuItem.submenu && <span style={{ marginLeft: "auto" }}>▶</span>}
       </MenuItem>
       {menuItem.submenu && (
         <Menu
@@ -43,12 +43,12 @@ const NestedMenuItem = ({ menuItem, parentHandleClose, onMenuItemClick }) => {
           open={Boolean(submenuAnchorEl)}
           onClose={handleSubmenuClose}
           anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
+            vertical: "top",
+            horizontal: "right"
           }}
           transformOrigin={{
-            vertical: 'top',
-            horizontal: 'left',
+            vertical: "top",
+            horizontal: "left"
           }}
         >
           {menuItem.submenu.map((subMenuItem, index) => (

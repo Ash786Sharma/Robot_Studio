@@ -1,13 +1,20 @@
+"use client";
 
-import Layout from '../components/Layout';
+import { useState } from "react";
+import Layout from "../components/Layout";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { darkTheme, lightTheme } from "./theme"; // Import themes
 
-
-const  Home = () => {
+const Home = () => {
+  const [themeMode, setThemeMode] = useState("dark"); // Default to dark theme
+  const theme = themeMode === "dark" ? darkTheme : lightTheme;
   return (
-    <Layout>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Layout themeMode={themeMode} setThemeMode={setThemeMode} />
+    </ThemeProvider>
+  );
+};
 
-    </Layout>
-  )
-}
-
-export default Home
+export default Home;

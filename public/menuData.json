@@ -10,10 +10,14 @@
         "icon": "FileOpenRounded" },
         {"label": "Save Project",
         "icon": "SaveRounded"},
-        {"label": "Import URDF",
-        "icon": "KeyboardDoubleArrowLeftRounded"},
-        { "label": "Export URDF",
-        "icon": "KeyboardDoubleArrowRightRounded" },
+        {"label": "Download",
+        "icon": "FileUpload"},
+        {"label": "Upload",
+        "icon": "FileDownload"},
+        {"label": "Upload Robot Model",
+        "icon": "PrecisionManufacturing"},
+        { "label": "Download Robot Model",
+        "icon": "PrecisionManufacturing" },
         { "label": "Close Project",
         "icon": "CloseRounded" }
       ]

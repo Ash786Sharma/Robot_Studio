@@ -21,12 +21,8 @@
         "icon": "DeleteForeverRounded"
       },
       {
-        "label": "Import URDF",
-        "icon": "KeyboardDoubleArrowLeftRounded"
-      },
-      {
-        "label": "Export URDF",
-        "icon": "KeyboardDoubleArrowRightRounded"
+        "label": "Upload/Download Robot Model",
+        "icon": "PrecisionManufacturing"
       },
       {
         "label": "Close Project",
@@ -52,6 +48,10 @@
         "label": "Redo" ,
         "icon": "RedoRounded"
       },
+      {"label": "Download",
+        "icon": "FileUpload"},
+        {"label": "Upload",
+        "icon": "FileDownload"},
       {
         "label": "Options",
         "icon": "TuneRounded"
