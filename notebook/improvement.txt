@@ -1,0 +1,583 @@
+Below is a practical Python implementation of a simplified FOC (Field Oriented Control) motor controller using ADRC (Active Disturbance Rejection Control) concepts for current and speed regulation.
+
+This example is suitable for:
+
+PMSM / BLDC motors
+
+Simulation or embedded Linux SBC
+
+Rapid prototyping before porting to C/C++ or MCU firmware
+
+Learning ADRC + FOC structure
+
+
+It includes:
+
+Clarke transform
+
+Park transform
+
+Inverse Park
+
+Simple SVPWM voltage generation
+
+ADRC current controllers (Id/Iq)
+
+ADRC speed controller
+
+Motor state loop
+
+
+For real hardware, replace:
+
+simulated motor feedback
+
+PWM output
+
+ADC sampling
+
+encoder interface
+
+
+with actual drivers.
+
+
+---
+
+High-Level FOC Structure
+
+Speed Ref
+   ↓
+Speed ADRC
+   ↓ iq_ref
+Current ADRC (Id/Iq)
+   ↓ vd/vq
+Inverse Park
+   ↓
+SVPWM
+   ↓
+3-Phase Inverter
+   ↓
+Motor
+
+
+---
+
+Python FOC + ADRC Controller
+
+import numpy as np
+import math
+import time
+
+
+# ============================================================
+# Utility Functions
+# ============================================================
+
+SQRT3 = np.sqrt(3.0)
+
+
+def clamp(x, xmin, xmax):
+    return max(xmin, min(x, xmax))
+
+
+# ============================================================
+# Clarke Transform
+# ============================================================
+
+def clarke(ia, ib, ic):
+    alpha = ia
+    beta = (ia + 2 * ib) / SQRT3
+    return alpha, beta
+
+
+# ============================================================
+# Park Transform
+# ============================================================
+
+def park(alpha, beta, theta):
+    c = math.cos(theta)
+    s = math.sin(theta)
+
+    d = alpha * c + beta * s
+    q = -alpha * s + beta * c
+
+    return d, q
+
+
+# ============================================================
+# Inverse Park
+# ============================================================
+
+def inverse_park(vd, vq, theta):
+    c = math.cos(theta)
+    s = math.sin(theta)
+
+    alpha = vd * c - vq * s
+    beta = vd * s + vq * c
+
+    return alpha, beta
+
+
+# ============================================================
+# SVPWM
+# ============================================================
+
+def svpwm(alpha, beta, vdc):
+
+    va = alpha
+    vb = -0.5 * alpha + (SQRT3 / 2.0) * beta
+    vc = -0.5 * alpha - (SQRT3 / 2.0) * beta
+
+    duty_a = 0.5 + va / vdc
+    duty_b = 0.5 + vb / vdc
+    duty_c = 0.5 + vc / vdc
+
+    duty_a = clamp(duty_a, 0.0, 1.0)
+    duty_b = clamp(duty_b, 0.0, 1.0)
+    duty_c = clamp(duty_c, 0.0, 1.0)
+
+    return duty_a, duty_b, duty_c
+
+
+# ============================================================
+# ADRC Controller
+# ============================================================
+
+class ADRC:
+
+    def __init__(self, b0, kp, kd, dt):
+
+        self.b0 = b0
+        self.kp = kp
+        self.kd = kd
+        self.dt = dt
+
+        # ESO states
+        self.z1 = 0.0
+        self.z2 = 0.0
+        self.z3 = 0.0
+
+        # ESO gains
+        self.beta1 = 100.0
+        self.beta2 = 3000.0
+        self.beta3 = 20000.0
+
+    def update(self, ref, y):
+
+        e = self.z1 - y
+
+        # Extended State Observer
+        self.z1 += self.dt * (self.z2 - self.beta1 * e)
+        self.z2 += self.dt * (self.z3 - self.beta2 * e)
+        self.z3 += self.dt * (-self.beta3 * e)
+
+        # Tracking error
+        err = ref - self.z1
+
+        # PD control
+        u0 = self.kp * err - self.kd * self.z2
+
+        # Disturbance compensation
+        u = (u0 - self.z3) / self.b0
+
+        return u
+
+
+# ============================================================
+# Motor Controller
+# ============================================================
+
+class FOCController:
+
+    def __init__(self, dt):
+
+        self.dt = dt
+
+        # Current loop ADRC
+        self.id_ctrl = ADRC(
+            b0=20.0,
+            kp=5.0,
+            kd=0.02,
+            dt=dt
+        )
+
+        self.iq_ctrl = ADRC(
+            b0=20.0,
+            kp=5.0,
+            kd=0.02,
+            dt=dt
+        )
+
+        # Speed loop ADRC
+        self.speed_ctrl = ADRC(
+            b0=5.0,
+            kp=0.5,
+            kd=0.01,
+            dt=dt
+        )
+
+        self.id_ref = 0.0
+
+    def update(
+        self,
+        speed_ref,
+        speed_meas,
+        ia,
+        ib,
+        ic,
+        theta,
+        vdc
+    ):
+
+        # ====================================================
+        # Clarke Transform
+        # ====================================================
+
+        alpha, beta = clarke(ia, ib, ic)
+
+        # ====================================================
+        # Park Transform
+        # ====================================================
+
+        id_meas, iq_meas = park(alpha, beta, theta)
+
+        # ====================================================
+        # Speed ADRC
+        # ====================================================
+
+        iq_ref = self.speed_ctrl.update(
+            speed_ref,
+            speed_meas
+        )
+
+        # ====================================================
+        # Current ADRC
+        # ====================================================
+
+        vd = self.id_ctrl.update(
+            self.id_ref,
+            id_meas
+        )
+
+        vq = self.iq_ctrl.update(
+            iq_ref,
+            iq_meas
+        )
+
+        # Voltage limiting
+        vmax = vdc * 0.577
+
+        vd = clamp(vd, -vmax, vmax)
+        vq = clamp(vq, -vmax, vmax)
+
+        # ====================================================
+        # Inverse Park
+        # ====================================================
+
+        alpha_v, beta_v = inverse_park(
+            vd,
+            vq,
+            theta
+        )
+
+        # ====================================================
+        # SVPWM
+        # ====================================================
+
+        duty_a, duty_b, duty_c = svpwm(
+            alpha_v,
+            beta_v,
+            vdc
+        )
+
+        return {
+            "duty_a": duty_a,
+            "duty_b": duty_b,
+            "duty_c": duty_c,
+            "id": id_meas,
+            "iq": iq_meas,
+            "vd": vd,
+            "vq": vq,
+            "iq_ref": iq_ref
+        }
+
+
+# ============================================================
+# Simulated Motor
+# ============================================================
+
+class SimpleMotor:
+
+    def __init__(self):
+
+        self.theta = 0.0
+        self.speed = 0.0
+
+    def update(self, torque_cmd, dt):
+
+        # Simple motor dynamics
+        J = 0.01
+        B = 0.001
+
+        accel = (torque_cmd - B * self.speed) / J
+
+        self.speed += accel * dt
+        self.theta += self.speed * dt
+
+        ia = math.sin(self.theta)
+        ib = math.sin(self.theta - 2.094)
+        ic = math.sin(self.theta + 2.094)
+
+        return ia, ib, ic
+
+
+# ============================================================
+# Main Loop
+# ============================================================
+
+if __name__ == "__main__":
+
+    dt = 0.001
+
+    foc = FOCController(dt)
+    motor = SimpleMotor()
+
+    speed_ref = 100.0
+    vdc = 24.0
+
+    for i in range(5000):
+
+        ia, ib, ic = motor.update(
+            torque_cmd=1.0,
+            dt=dt
+        )
+
+        result = foc.update(
+            speed_ref=speed_ref,
+            speed_meas=motor.speed,
+            ia=ia,
+            ib=ib,
+            ic=ic,
+            theta=motor.theta,
+            vdc=vdc
+        )
+
+        if i % 100 == 0:
+            print(
+                f"Speed: {motor.speed:.2f}, "
+                f"Iq_ref: {result['iq_ref']:.2f}, "
+                f"DutyA: {result['duty_a']:.2f}"
+            )
+
+        time.sleep(dt)
+
+
+---
+
+What This Implements
+
+FOC Core
+
+Clarke Transform
+
+Park Transform
+
+dq current control
+
+Inverse Park
+
+SVPWM duty generation
+
+
+
+---
+
+ADRC Features
+
+The ADRC observer estimates:
+
+load disturbance
+
+back EMF effects
+
+parameter mismatch
+
+friction
+
+external torque disturbances
+
+
+ESO structure:
+
+z1 = estimated state
+z2 = estimated derivative
+z3 = estimated disturbance
+
+Control law:
+
+u = (u0 - z3)/b0
+
+This gives much better robustness than PID.
+
+
+---
+
+Real Hardware Integration
+
+Replace these sections:
+
+ADC Current Read
+
+ia, ib, ic
+
+with:
+
+shunt current ADC
+
+inline current sensors
+
+Hall current sensors
+
+
+
+---
+
+Rotor Position
+
+theta
+
+from:
+
+encoder
+
+resolver
+
+Hall sensors
+
+sensorless estimator
+
+
+
+---
+
+PWM Output
+
+Replace:
+
+return duty_a, duty_b, duty_c
+
+with:
+
+STM32 TIM1/TIM8
+
+ESP32 MCPWM
+
+Linux PWM
+
+FPGA PWM core
+
+
+
+---
+
+Recommended Real-Time Architecture
+
+For real hardware:
+
+Loop	Frequency
+
+Current Loop	10–40 kHz
+Speed Loop	1–5 kHz
+Position Loop	100–1000 Hz
+
+
+Python alone is usually too slow for hard real-time FOC on Linux without:
+
+PREEMPT_RT
+
+Xenomai
+
+FPGA offload
+
+MCU coprocessor
+
+
+
+---
+
+Better Production Architecture
+
+Recommended stack:
+
+Layer	Technology
+
+Fast current loop	STM32 / FPGA / RP2350
+High-level ADRC tuning	Python
+Visualization	PyQt / Web UI
+ML tuning	PyTorch
+EtherCAT/CAN	SOEM / SocketCAN
+
+
+
+---
+
+Advanced Improvements
+
+You can extend this with:
+
+Sensorless observer
+
+Sliding mode observer
+
+MTPA
+
+Field weakening
+
+Space vector overmodulation
+
+Flux observer
+
+Dead-time compensation
+
+Anti-cogging
+
+Cascaded ADRC
+
+Nonlinear ADRC (NLSEF)
+
+EKF rotor estimator
+
+FPGA SVPWM accelerator
+
+
+
+---
+
+Recommended Hardware
+
+For serious implementation:
+
+MCU
+
+STMicroelectronics STM32G4 / H7
+
+Texas Instruments C2000
+
+Espressif Systems ESP32-S3
+
+
+FPGA
+
+AMD Zynq RFSoC
+
+Intel Cyclone V
+
+
+Motor Driver IC
+
+Texas Instruments DRV8302
+
+Infineon Technologies 6EDL7141
+
+STMicroelectronics STSPIN32
