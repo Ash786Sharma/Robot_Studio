@@ -581,3 +581,455 @@ Texas Instruments DRV8302
 Infineon Technologies 6EDL7141
 
 STMicroelectronics STSPIN32
+
+
+To properly understand FOC + ADRC, visualizing the rotating reference frames, current vectors, voltage vectors, and control dynamics is extremely important.
+
+A good educational/simulation architecture should include:
+
+
+---
+
+Recommended Visualization Stack
+
+Visualization	Purpose
+
+2D dq vector animation	Understand Park transform
+αβ rotating vector plot	Space vector understanding
+3-phase waveform plots	Current/voltage relationships
+ADRC observer state plots	Disturbance rejection
+Torque-speed response	Dynamic behavior
+3D motor magnetic field	Intuitive flux visualization
+3D rotating rotor/stator	Mechanical understanding
+Real-time vector diagrams	Control insight
+
+
+
+---
+
+Best Python Libraries
+
+Library	Use
+
+matplotlib	2D plots
+matplotlib.animation	Real-time animation
+pyqtgraph	Fast live plotting
+plotly	Interactive 3D
+vispy	GPU accelerated
+vtk	Scientific 3D
+pyopengl	Custom rendering
+pygame	Lightweight visualization
+moderngl	Modern GPU rendering
+
+
+
+---
+
+Architecture
+
+Motor Simulation
+       ↓
+FOC Controller
+       ↓
+ADRC Observer
+       ↓
+Visualization Layer
+ ├── dq frame
+ ├── αβ vector
+ ├── PWM
+ ├── Torque
+ ├── Flux
+ └── 3D rotor
+
+
+---
+
+Example 1 — Real-Time 2D dq Vector Visualization
+
+This shows:
+
+rotating αβ vector
+
+dq transformed current
+
+reference vector
+
+rotor electrical angle
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+theta = 0.0
+
+fig, ax = plt.subplots(figsize=(8, 8))
+
+ax.set_xlim(-1.5, 1.5)
+ax.set_ylim(-1.5, 1.5)
+
+alpha_line, = ax.plot([], [], lw=3, label='Alpha-Beta Vector')
+d_line, = ax.plot([], [], lw=3, label='d-axis')
+q_line, = ax.plot([], [], lw=3, label='q-axis')
+
+ax.legend()
+
+
+def update(frame):
+
+    global theta
+
+    theta += 0.05
+
+    alpha = np.cos(theta)
+    beta = np.sin(theta)
+
+    d = alpha * np.cos(theta) + beta * np.sin(theta)
+    q = -alpha * np.sin(theta) + beta * np.cos(theta)
+
+    alpha_line.set_data([0, alpha], [0, beta])
+
+    d_line.set_data(
+        [0, np.cos(theta)],
+        [0, np.sin(theta)]
+    )
+
+    q_line.set_data(
+        [0, -np.sin(theta)],
+        [0, np.cos(theta)]
+    )
+
+    return alpha_line, d_line, q_line
+
+
+ani = FuncAnimation(
+    fig,
+    update,
+    interval=30
+)
+
+plt.grid()
+plt.show()
+
+
+---
+
+What This Teaches
+
+αβ Frame
+
+Stationary stator frame.
+
+Vector rotates:
+
+iα + jiβ
+
+
+---
+
+dq Frame
+
+Rotating synchronous frame.
+
+Park transform:
+
+\begin{bmatrix}i_d\\i_q\end{bmatrix}=\begin{bmatrix}\cos\theta & \sin\theta\\-\sin\theta & \cos\theta\end{bmatrix}\begin{bmatrix}i_\alpha\\i_\beta\end{bmatrix}
+
+In synchronous frame:
+
+torque current becomes DC
+
+flux current becomes DC
+
+
+This is why FOC works.
+
+
+---
+
+Example 2 — 3-Phase Current Visualization
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+fig, ax = plt.subplots()
+
+x = np.linspace(0, 2*np.pi, 500)
+
+line_a, = ax.plot([], [], label='Ia')
+line_b, = ax.plot([], [], label='Ib')
+line_c, = ax.plot([], [], label='Ic')
+
+ax.set_xlim(0, 2*np.pi)
+ax.set_ylim(-1.5, 1.5)
+
+ax.legend()
+
+
+def update(frame):
+
+    theta = frame * 0.05
+
+    ia = np.sin(x + theta)
+    ib = np.sin(x + theta - 2*np.pi/3)
+    ic = np.sin(x + theta + 2*np.pi/3)
+
+    line_a.set_data(x, ia)
+    line_b.set_data(x, ib)
+    line_c.set_data(x, ic)
+
+    return line_a, line_b, line_c
+
+
+ani = FuncAnimation(fig, update, interval=30)
+
+plt.grid()
+plt.show()
+
+
+---
+
+Example 3 — ADRC Disturbance Rejection Visualization
+
+This is one of the most important demonstrations.
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+dt = 0.001
+t = np.arange(0, 5, dt)
+
+speed = []
+disturbance = []
+
+x = 0.0
+
+for i in range(len(t)):
+
+    d = 0.0
+
+    if t[i] > 2.0:
+        d = 5.0
+
+    u = 10.0 - d
+
+    x += dt * u
+
+    speed.append(x)
+    disturbance.append(d)
+
+plt.plot(t, speed, label='Motor Speed')
+plt.plot(t, disturbance, label='Disturbance')
+
+plt.legend()
+plt.grid()
+plt.show()
+
+
+---
+
+What This Demonstrates
+
+At:
+
+t = 2s
+
+a sudden load torque appears.
+
+ADRC estimates disturbance:
+
+z3 ≈ disturbance
+
+and compensates in real time.
+
+
+---
+
+Example 4 — 3D Rotor Visualization
+
+Using plotly.
+
+import numpy as np
+import plotly.graph_objects as go
+
+theta = np.linspace(0, 2*np.pi, 100)
+
+x = np.cos(theta)
+y = np.sin(theta)
+z = np.zeros_like(theta)
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter3d(
+    x=x,
+    y=y,
+    z=z,
+    mode='lines'
+))
+
+fig.show()
+
+
+---
+
+Better 3D Concepts to Visualize
+
+You can animate:
+
+Visualization	Meaning
+
+Rotor magnetic field	Permanent magnet flux
+Stator rotating field	Space vector
+Torque vector	iq interaction
+Flux linkage	λd λq
+SVPWM sectors	Inverter modulation
+dq rotating frame	Synchronous transform
+Field weakening	High-speed operation
+MTPA	Torque optimization
+
+
+
+---
+
+Recommended Educational Visualizations
+
+
+---
+
+1. Space Vector Hexagon
+
+Critical for understanding SVPWM.
+
+Shows:
+
+6 inverter sectors
+
+active vectors
+
+zero vectors
+
+modulation trajectory
+
+
+
+---
+
+2. dq Current Regulation
+
+Plot:
+
+id_ref vs id
+
+iq_ref vs iq
+
+
+You will see ADRC rejecting disturbances.
+
+
+---
+
+3. Observer States
+
+Plot:
+
+z1 = estimated current
+z2 = derivative
+z3 = disturbance estimate
+
+This explains ADRC internally.
+
+
+---
+
+Production-Quality Visualization Stack
+
+For advanced simulation:
+
+Component	Recommended
+
+Physics	MuJoCo / PyBullet
+Electromagnetics	FEMM / Elmer FEM
+3D rendering	OpenGL / Vulkan
+GUI	Qt
+Real-time plots	pyqtgraph
+GPU compute	CUDA
+FPGA visualization	WebGPU
+
+
+
+---
+
+Extremely Powerful Upgrade
+
+You can build a full digital twin:
+
+Real Motor
+    ↕
+CAN/EtherCAT
+    ↕
+Python Digital Twin
+    ↕
+3D Visualization
+
+showing:
+
+live currents
+
+torque
+
+magnetic field
+
+efficiency map
+
+thermal model
+
+vibration
+
+observer states
+
+
+in real time.
+
+This is similar to industrial drives from:
+
+Siemens
+
+ABB
+
+Bosch Rexroth
+
+Yaskawa Electric
+
+
+
+---
+
+Most Important Concept to Understand
+
+FOC essentially converts:
+
+AC motor control
+
+into:
+
+DC motor control
+
+using coordinate transforms.
+
+The key transform is:
+
+f(x)=e^{j\theta}
+
+which rotates the frame with the rotor.
+
+Then:
+
+sinusoidal currents become constant
+
+torque becomes linear
+
+control becomes simple
+
+
+That is the core mathematical insight behind FOC.
