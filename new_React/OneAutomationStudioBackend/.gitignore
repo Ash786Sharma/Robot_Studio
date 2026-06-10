@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage (testing)
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Socket / temp files (your IDE project)
+storage/temp/
+storage/cache/
+
+# Database files (if ever local dev DB files exist)
+*.sqlite
+*.db
+
+# Docker
+docker-compose.override.yml
+
+# Optional: Prisma (if you ever use it later)
+# prisma/migrations/
