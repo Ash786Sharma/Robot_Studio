@@ -63,7 +63,17 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(pinoHttp({ logger }));
+app.use(
+  pinoHttp({
+    logger,
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+      },
+    },
+  })
+);
 
 app.use(
   session({

@@ -1,5 +1,17 @@
 import { createTheme } from "@mui/material/styles";
 
+declare module "@mui/material/styles" {
+  interface TypeBackground {
+    primary: string;
+    secondary: string;
+    tertiary: string;
+    quaternary: string;
+  }
+  interface TypeText {
+    tertiary: string;
+  }
+}
+
 // VS Code Dark Theme
 export const darkTheme = createTheme({
   palette: {
