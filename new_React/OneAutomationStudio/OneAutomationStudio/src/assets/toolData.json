@@ -1,0 +1,9 @@
+{
+  "toolItems": [
+    { "label": "New File", "icon": "InsertDriveFile" },
+    { "label": "Open File", "icon": "FolderOpen" },
+    { "label": "Save", "icon": "Save" },
+    { "label": "Run", "icon": "PlayArrow" },
+    { "label": "Debug", "icon": "BugReport" }
+  ]
+}

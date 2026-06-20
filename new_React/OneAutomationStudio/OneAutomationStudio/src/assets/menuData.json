@@ -1,0 +1,9 @@
+{
+  "menuItems": [
+    { "label": "File", "icon": "Description", "action": "file" },
+    { "label": "Edit", "icon": "Edit", "action": "edit" },
+    { "label": "View", "icon": "Visibility", "action": "view" },
+    { "label": "Project", "icon": "FolderOpen", "action": "project" },
+    { "label": "Help", "icon": "HelpOutline", "action": "help" }
+  ]
+}
