@@ -83,7 +83,7 @@ const ResizePanel: React.FC<ResizePanelProps> = ({
           [direction === 'horizontal' ? 'cursor' : 'cursor']: 'col-resize',
           backgroundColor: 'transparent',
           '&:hover': {
-            backgroundColor: '#0e639c',
+            backgroundColor: 'var(--ui-primary)',
           },
         }}
       />

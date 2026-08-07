@@ -57,8 +57,8 @@ export const IDELayout: React.FC = () => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#1e1e1e',
-        color: '#d4d4d4',
+        backgroundColor: 'var(--ui-bg)',
+        color: 'var(--ui-text)',
       }}
     >
       {/* Menu Bar */}
@@ -78,12 +78,12 @@ export const IDELayout: React.FC = () => {
           justifyContent: 'space-between',
           px: 1.5,
           py: 0.5,
-          backgroundColor: '#252526',
-          borderBottom: '1px solid #3e3e42',
-          color: '#858585',
+          backgroundColor: 'var(--ui-surface)',
+          borderBottom: '1px solid var(--ui-border)',
+          color: 'var(--ui-text-secondary)',
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 600, color: '#d4d4d4' }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'var(--ui-text)' }}>
           Robot Studio / {activeTab?.filename ?? 'No file selected'}
         </Typography>
         <Typography variant="caption">
@@ -102,20 +102,20 @@ export const IDELayout: React.FC = () => {
         }}
       >
         {/* Sidebar */}
-        {sidebarOpen && (
+        {sidebarOpen && explorerOpen && (
           <>
             <Box
               className="ide-sidebar"
               sx={{
                 width: sidebarWidth,
-                backgroundColor: '#252526',
-                borderRight: '1px solid #3e3e42',
+                backgroundColor: 'var(--ui-surface)',
+                borderRight: '1px solid var(--ui-border)',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
               }}
             >
-              {explorerOpen && <Explorer />}
+              <Explorer />
             </Box>
             <Box
               className="ide-resize-handle"
@@ -143,7 +143,7 @@ export const IDELayout: React.FC = () => {
                 width: 4,
                 backgroundColor: 'transparent',
                 '&:hover': {
-                  backgroundColor: '#0e639c',
+                  backgroundColor: 'var(--ui-primary)',
                 },
               }}
             />
@@ -158,7 +158,7 @@ export const IDELayout: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            backgroundColor: '#1e1e1e',
+            backgroundColor: 'var(--ui-bg)',
             minWidth: 0,
           }}
         >
@@ -202,7 +202,7 @@ export const IDELayout: React.FC = () => {
                   height: 4,
                   backgroundColor: 'transparent',
                   '&:hover': {
-                    backgroundColor: '#0e639c',
+                    backgroundColor: 'var(--ui-primary)',
                   },
                 }}
               />
@@ -210,8 +210,8 @@ export const IDELayout: React.FC = () => {
                 className="ide-terminal-area"
                 sx={{
                   height: terminalHeight,
-                  backgroundColor: '#1e1e1e',
-                  borderTop: '1px solid #3e3e42',
+                  backgroundColor: 'var(--ui-bg)',
+                  borderTop: '1px solid var(--ui-border)',
                   overflow: 'hidden',
                 }}
               >
@@ -229,9 +229,9 @@ export const IDELayout: React.FC = () => {
           justifyContent: 'space-between',
           px: 1.5,
           py: 0.5,
-          backgroundColor: '#1e1e1e',
-          borderTop: '1px solid #3e3e42',
-          color: '#858585',
+          backgroundColor: 'var(--ui-bg)',
+          borderTop: '1px solid var(--ui-border)',
+          color: 'var(--ui-text-secondary)',
           fontSize: '12px',
         }}
       >

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { ViewMode } from '../types';
 
-interface UIStore {
+export interface UIStore {
   // State
   sidebarOpen: boolean;
   terminalOpen: boolean;
@@ -9,7 +9,7 @@ interface UIStore {
   terminalHeight: number;
   sidebarWidth: number;
   viewMode: ViewMode;
-  theme: 'light' | 'dark';
+  theme: string;
 
   // Actions
   toggleSidebar: () => void;
@@ -21,7 +21,7 @@ interface UIStore {
   setTerminalHeight: (height: number) => void;
   setSidebarWidth: (width: number) => void;
   setViewMode: (mode: ViewMode) => void;
-  setTheme: (theme: 'light' | 'dark') => void;
+  setTheme: (theme: string) => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -34,7 +34,7 @@ export const useUIStore = create<UIStore>((set) => ({
     layout: 'text',
     activePanel: 'editor',
   },
-  theme: 'dark',
+  theme: 'vs-dark',
 
   toggleSidebar: () =>
     set((state) => ({

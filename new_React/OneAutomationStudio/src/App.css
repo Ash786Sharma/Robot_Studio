@@ -4,14 +4,14 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #1e1e1e;
-  color: #d4d4d4;
+  background-color: var(--ui-bg);
+  color: var(--ui-text);
 }
 
 .ide-header {
   flex-shrink: 0;
-  background-color: #1e1e1e;
-  border-bottom: 1px solid #3e3e42;
+  background-color: var(--ui-bg);
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .ide-main-content {
@@ -23,8 +23,8 @@
 
 .ide-sidebar {
   flex-shrink: 0;
-  background-color: #252526;
-  border-right: 1px solid #3e3e42;
+  background-color: var(--ui-surface);
+  border-right: 1px solid var(--ui-border);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -38,7 +38,7 @@
 }
 
 .ide-resize-handle:hover {
-  background-color: #0e639c;
+  background-color: var(--ui-primary);
 }
 
 .ide-editor-area {
@@ -70,8 +70,8 @@
 .menu-bar {
   display: flex;
   align-items: center;
-  background-color: #1e1e1e;
-  border-bottom: 1px solid #3e3e42;
+  background-color: var(--ui-menu-bg);
+  border-bottom: 1px solid var(--ui-border);
   height: 35px;
   padding: 0;
 }
@@ -79,7 +79,7 @@
 .menu-item {
   background: none;
   border: none;
-  color: #d4d4d4;
+  color: var(--ui-text);
   padding: 6px 12px;
   font-size: 13px;
   cursor: pointer;
@@ -88,14 +88,14 @@
 }
 
 .menu-item:hover {
-  background-color: #2d2d30;
+  background-color: var(--ui-hover);
 }
 
 /* Tabs */
 .editor-tabs {
   display: flex;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background-color: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
   height: 35px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -109,7 +109,7 @@
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #858585;
+  color: var(--ui-text-secondary);
   padding: 0 12px;
   height: 35px;
   display: flex;
@@ -119,18 +119,18 @@
   font-size: 13px;
   white-space: nowrap;
   transition: all 0.2s;
-  border-right: 1px solid #3e3e42;
+  border-right: 1px solid var(--ui-border);
 }
 
 .editor-tab:hover {
-  background-color: #2d2d30;
-  color: #fff;
+  background-color: var(--ui-surface-alt);
+  color: var(--ui-text);
 }
 
 .editor-tab.active {
-  color: #fff;
-  background-color: #1e1e1e;
-  border-bottom-color: #0e639c;
+  color: var(--ui-text);
+  background-color: var(--ui-bg);
+  border-bottom-color: var(--ui-primary);
 }
 
 .editor-tab-close {
@@ -158,7 +158,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #252526;
+  background-color: var(--ui-surface);
   overflow: hidden;
 }
 
@@ -188,7 +188,7 @@
 }
 
 .file-tree-node:hover {
-  background-color: #2d2d30;
+  background-color: var(--ui-surface-alt);
 }
 
 .file-tree-node-expand {
@@ -239,14 +239,14 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #1e1e1e;
+  background-color: var(--ui-bg);
   overflow: hidden;
 }
 
 .terminal-tabs {
   display: flex;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background-color: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
   height: 35px;
   padding: 0;
   align-items: center;
@@ -255,7 +255,7 @@
 .terminal-tab {
   background: none;
   border: none;
-  color: #858585;
+  color: var(--ui-text-secondary);
   padding: 0 12px;
   height: 35px;
   display: flex;
@@ -263,18 +263,18 @@
   gap: 8px;
   cursor: pointer;
   font-size: 13px;
-  border-right: 1px solid #3e3e42;
+  border-right: 1px solid var(--ui-border);
   transition: all 0.2s;
 }
 
 .terminal-tab.active {
-  background-color: #1e1e1e;
-  color: #fff;
+  background-color: var(--ui-bg);
+  color: var(--ui-text);
 }
 
 .terminal-tab:hover {
-  background-color: #2d2d30;
-  color: #fff;
+  background-color: var(--ui-surface-alt);
+  color: var(--ui-text);
 }
 
 .terminal-content {
@@ -290,11 +290,11 @@
 .terminal-input {
   border: none;
   background: none;
-  color: #d4d4d4;
+  color: var(--ui-text);
   padding: 8px 12px;
   font-family: 'Courier New', Consolas, monospace;
   font-size: 13px;
-  border-top: 1px solid #3e3e42;
+  border-top: 1px solid var(--ui-border);
   width: 100%;
 }
 
@@ -316,15 +316,15 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background-color: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background-color: var(--ui-toolbar-bg);
+  border-bottom: 1px solid var(--ui-border);
   height: auto;
 }
 
 .toolbar-button {
   background: none;
   border: none;
-  color: #d4d4d4;
+  color: var(--ui-text);
   cursor: pointer;
   padding: 4px 6px;
   display: flex;
@@ -335,14 +335,14 @@
 }
 
 .toolbar-button:hover {
-  background-color: #3e3e42;
-  color: #fff;
+  background-color: var(--ui-border);
+  color: var(--ui-text);
 }
 
 .toolbar-separator {
   width: 1px;
   height: 20px;
-  background-color: #3e3e42;
+  background-color: var(--ui-border);
   margin: 0 4px;
 }
 

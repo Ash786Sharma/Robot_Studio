@@ -38,15 +38,15 @@ export const Terminal: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: '#1e1e1e',
-        color: '#d4d4d4',
+        backgroundColor: 'var(--ui-bg)',
+        color: 'var(--ui-text)',
       }}
     >
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          borderBottom: '1px solid #3e3e42',
+          borderBottom: '1px solid var(--ui-border)',
           paddingRight: 1,
         }}
       >
@@ -79,7 +79,7 @@ export const Terminal: React.FC = () => {
                         e.stopPropagation();
                         setTabs((prev) => prev.filter((t) => t.id !== tab.id));
                       }}
-                      sx={{ padding: '2px', color: '#858585' }}
+                      sx={{ padding: '2px', color: 'var(--ui-text-secondary)' }}
                     >
                       <CloseIcon fontSize="small" />
                     </IconButton>
@@ -113,7 +113,7 @@ export const Terminal: React.FC = () => {
             <Typography
               component="div"
               sx={{
-                color: '#d4d4d4',
+                color: 'var(--ui-text)',
                 marginBottom: 1,
               }}
             >

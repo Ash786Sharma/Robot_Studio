@@ -3,10 +3,12 @@ import { Box, Tabs, Tab, IconButton, Tooltip } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import CloseIcon from '@mui/icons-material/Close';
 import { useEditorStore } from '../../store/editorStore';
+import { useUIStore } from '../../store/uiStore';
 import type { EditorTab } from '../../types';
 
 export const CodeEditor: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, removeTab, updateTab } = useEditorStore();
+  const { theme } = useUIStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
@@ -60,7 +62,7 @@ export const CodeEditor: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: '#1e1e1e',
+        backgroundColor: 'var(--ui-bg)',
       }}
     >
       {tabs.length > 0 ? (
@@ -125,8 +127,8 @@ export const CodeEditor: React.FC = () => {
                 value={activeTab.content}
                 onChange={handleEditorChange}
                 onMount={handleEditorMount}
-                theme="vs-dark"
-                loading={<Box sx={{ color: '#858585', p: 2 }}>Loading editor…</Box>}
+                theme={theme === 'vs-light' || theme === 'light' ? 'light' : 'vs-dark'}
+                loading={<Box sx={{ color: 'var(--ui-text-secondary)', p: 2 }}>Loading editor…</Box>}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,
@@ -148,7 +150,7 @@ export const CodeEditor: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             height: '100%',
-            color: '#858585',
+            color: 'var(--ui-text-secondary)',
           }}
         >
           Select a file from the explorer to start editing

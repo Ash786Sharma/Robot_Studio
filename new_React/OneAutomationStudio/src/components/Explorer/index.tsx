@@ -59,7 +59,7 @@ const FileTree: React.FC<FileTreeProps> = ({ files, onSelectFile, searchQuery })
               cursor: 'pointer',
               borderRadius: 1,
               '&:hover': {
-                backgroundColor: '#2d2d30',
+                backgroundColor: 'var(--ui-hover)',
               },
               '&:hover .file-actions': {
                 opacity: 1,
@@ -91,9 +91,9 @@ const FileTree: React.FC<FileTreeProps> = ({ files, onSelectFile, searchQuery })
               </IconButton>
             )}
             {node.type === 'folder' ? (
-              <FolderIcon fontSize="small" sx={{ color: '#dcb939', marginLeft: '4px' }} />
+              <FolderIcon fontSize="small" sx={{ color: 'var(--ui-primary)', marginLeft: '4px' }} />
             ) : (
-              <InsertDriveFileIcon fontSize="small" sx={{ color: '#9cdcfe' }} />
+              <InsertDriveFileIcon fontSize="small" sx={{ color: 'var(--ui-text-secondary)' }} />
             )}
             <Typography variant="body2" sx={{ flex: 1 }}>
               {node.name}
@@ -126,7 +126,7 @@ const FileTree: React.FC<FileTreeProps> = ({ files, onSelectFile, searchQuery })
     });
   };
 
-  return <Box sx={{ color: '#d4d4d4' }}>{renderTree(files)}</Box>;
+  return <Box sx={{ color: 'var(--ui-text)' }}>{renderTree(files)}</Box>;
 };
 
 export const Explorer: React.FC = () => {
@@ -180,8 +180,8 @@ export const Explorer: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: '#252526',
-        color: '#d4d4d4',
+        backgroundColor: 'var(--ui-surface)',
+        color: 'var(--ui-text)',
       }}
     >
       <Box sx={{ padding: 1 }}>

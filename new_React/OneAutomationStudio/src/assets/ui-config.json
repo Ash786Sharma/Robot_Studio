@@ -1,0 +1,76 @@
+{
+  "menuBar": [
+    {
+      "id": "file",
+      "label": "File",
+      "items": [
+        { "id": "newFile", "label": "New File", "action": "noop" },
+        { "id": "openFolder", "label": "Open Folder", "action": "noop" },
+        {
+          "id": "openRecent",
+          "label": "Open Recent",
+          "items": [
+            {
+              "id": "recentProject1",
+              "label": "Project 1",
+              "action": "noop"
+            },
+            {
+              "id": "recentProject2",
+              "label": "Project 2",
+              "action": "noop"
+            },
+            {
+              "id": "moreRecent",
+              "label": "More",
+              "items": [
+                { "id": "recentProject3", "label": "Project 3", "action": "noop" },
+                { "id": "recentProject4", "label": "Project 4", "action": "noop" }
+              ]
+            }
+          ]
+        },
+        { "id": "save", "label": "Save", "action": "noop" },
+        { "id": "saveAll", "label": "Save All", "action": "noop", "separatorAfter": true },
+        { "id": "exit", "label": "Exit", "action": "noop" }
+      ]
+    },
+    {
+      "id": "edit",
+      "label": "Edit",
+      "items": [
+        { "id": "undo", "label": "Undo", "action": "noop" },
+        { "id": "redo", "label": "Redo", "action": "noop" },
+        { "id": "cut", "label": "Cut", "action": "noop" },
+        { "id": "copy", "label": "Copy", "action": "noop" },
+        { "id": "paste", "label": "Paste", "action": "noop" }
+      ]
+    },
+    {
+      "id": "view",
+      "label": "View",
+      "items": [
+        { "id": "toggleExplorer", "label": "Toggle Explorer", "action": "toggleExplorer", "state": "explorerOpen" },
+        { "id": "toggleTerminal", "label": "Toggle Terminal", "action": "toggleTerminal", "state": "terminalOpen" },
+        { "id": "textEditor", "label": "Text Editor", "action": "viewText" },
+        { "id": "graphEditor", "label": "Graph Editor", "action": "viewGraphical" },
+        { "id": "3dView", "label": "3D View", "action": "view3D" },
+        { "id": "splitView", "label": "Split View", "action": "viewSplit" }
+      ]
+    }
+  ],
+  "toolBar": [
+    { "id": "save", "label": "Save", "icon": "Save", "display": "icon", "title": "Save (Ctrl+S)", "action": "noop" },
+    { "id": "saveAll", "label": "Save All", "icon": "Save", "display": "icon", "title": "Save All (Ctrl+Shift+S)", "action": "noop" },
+    { "id": "toolbar-separator-1", "type": "separator" },
+    { "id": "build", "label": "Build", "icon": "Build", "display": "icon", "title": "Build", "action": "noop" },
+    { "id": "run", "label": "Run", "icon": "PlayArrow", "display": "icon", "title": "Run (F5)", "action": "noop" },
+    { "id": "debug", "label": "Debug", "icon": "BugReport", "display": "icon", "title": "Debug", "action": "noop" },
+    { "id": "toolbar-separator-2", "type": "separator" },
+    { "id": "explorer", "label": "Explorer", "icon": "Folder", "display": "both", "title": "Explorer", "action": "toggleSidebar" },
+    { "id": "search", "label": "Search", "icon": "Search", "display": "icon", "title": "Search", "action": "noop" },
+    { "id": "toolbar-separator-3", "type": "separator" },
+    { "id": "sourceControl", "label": "Source Control", "display": "text", "title": "Source Control", "action": "noop" },
+    { "id": "settings", "label": "Settings", "icon": "Settings", "display": "both", "title": "Settings", "action": "noop" }
+  ]
+}

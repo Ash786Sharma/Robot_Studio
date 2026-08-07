@@ -1,11 +1,8 @@
 import { useEffect } from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { darkTheme, lightTheme } from './theme';
 import { IDELayout } from './layouts/IDELayout';
-import { useUIStore } from './store/uiStore';
 import { useExplorerStore } from './store/explorerStore';
+import { UIStyleProvider } from './components/UIStyleProvider';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -18,7 +15,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { theme } = useUIStore();
   const { setFiles, expandFolder } = useExplorerStore();
 
   // Initialize with sample file structure
@@ -83,10 +79,9 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
-        <CssBaseline />
+      <UIStyleProvider>
         <IDELayout />
-      </ThemeProvider>
+      </UIStyleProvider>
     </QueryClientProvider>
   );
 }
