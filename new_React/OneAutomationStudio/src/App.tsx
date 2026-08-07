@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { darkTheme } from './theme';
+import { darkTheme, lightTheme } from './theme';
 import { IDELayout } from './layouts/IDELayout';
 import { useUIStore } from './store/uiStore';
 import { useExplorerStore } from './store/explorerStore';
@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
 
 function App() {
   const { theme } = useUIStore();
-  const { setFiles } = useExplorerStore();
+  const { setFiles, expandFolder } = useExplorerStore();
 
   // Initialize with sample file structure
   useEffect(() => {
@@ -36,7 +36,16 @@ function App() {
             type: 'file' as const,
             path: '/src/main.ts',
             language: 'typescript',
-            content: '// Main program',
+            content: `export class RobotProgram {
+  constructor() {
+    this.initialize();
+  }
+
+  initialize() {
+    console.log('Robot Studio ready');
+  }
+}
+`,
           },
           {
             id: 'file-2',
@@ -44,7 +53,7 @@ function App() {
             type: 'file' as const,
             path: '/src/config.json',
             language: 'json',
-            content: '{}',
+            content: '{\n  "robot": "UR5",\n  "mode": "teach"\n}',
           },
         ],
       },
@@ -60,17 +69,21 @@ function App() {
             type: 'file' as const,
             path: '/models/robot.urdf',
             language: 'xml',
-            content: '<!-- Robot URDF -->',
+            content: `<robot name="UR5">
+  <link name="base_link" />
+  <joint name="shoulder" type="revolute" />
+</robot>`,
           },
         ],
       },
     ];
     setFiles(sampleFiles);
-  }, [setFiles]);
+    sampleFiles.forEach((folder) => expandFolder(folder.id));
+  }, [expandFolder, setFiles]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme === 'dark' ? darkTheme : darkTheme}>
+      <ThemeProvider theme={theme === 'dark' ? darkTheme : lightTheme}>
         <CssBaseline />
         <IDELayout />
       </ThemeProvider>

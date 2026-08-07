@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { MenuBar } from '../components/MenuBar';
 import { ToolBar } from '../components/ToolBar';
 import { Explorer } from '../components/Explorer';
@@ -7,8 +7,8 @@ import { CodeEditor } from '../components/Editor';
 import { Terminal } from '../components/Terminal';
 import { View3D } from '../components/3DView';
 import { GraphEditor } from '../components/GraphEditor';
+import { useEditorStore } from '../store/editorStore';
 import { useUIStore } from '../store/uiStore';
-import ResizePanel from './ResizePanel';
 
 export const IDELayout: React.FC = () => {
   const {
@@ -21,6 +21,9 @@ export const IDELayout: React.FC = () => {
     setTerminalHeight,
     setSidebarWidth,
   } = useUIStore();
+  const { tabs, activeTabId } = useEditorStore();
+
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   const renderEditorContent = () => {
     switch (viewMode.layout) {
@@ -66,6 +69,26 @@ export const IDELayout: React.FC = () => {
       {/* Tool Bar */}
       <Box className="toolbar">
         <ToolBar />
+      </Box>
+
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 1.5,
+          py: 0.5,
+          backgroundColor: '#252526',
+          borderBottom: '1px solid #3e3e42',
+          color: '#858585',
+        }}
+      >
+        <Typography variant="caption" sx={{ fontWeight: 600, color: '#d4d4d4' }}>
+          Robot Studio / {activeTab?.filename ?? 'No file selected'}
+        </Typography>
+        <Typography variant="caption">
+          {viewMode.layout === 'text' ? 'Text Editor' : viewMode.layout === 'graphical' ? 'Graph Editor' : viewMode.layout === '3d' ? '3D View' : 'Split View'}
+        </Typography>
       </Box>
 
       {/* Main Content Area */}
@@ -197,6 +220,23 @@ export const IDELayout: React.FC = () => {
             </>
           )}
         </Box>
+      </Box>
+
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: 1.5,
+          py: 0.5,
+          backgroundColor: '#1e1e1e',
+          borderTop: '1px solid #3e3e42',
+          color: '#858585',
+          fontSize: '12px',
+        }}
+      >
+        <Typography variant="caption">main • TypeScript • Ready</Typography>
+        <Typography variant="caption">Ln 1, Col 1 • UTF-8</Typography>
       </Box>
     </Box>
   );

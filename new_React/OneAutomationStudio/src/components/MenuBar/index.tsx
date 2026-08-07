@@ -1,7 +1,6 @@
 import React from 'react';
 import { Menu, MenuItem } from '@mui/material';
 import { useUIStore } from '../../store/uiStore';
-import { useEditorStore } from '../../store/editorStore';
 
 export const MenuBar: React.FC = () => {
   const [fileAnchor, setFileAnchor] = React.useState<null | HTMLElement>(null);
@@ -9,7 +8,6 @@ export const MenuBar: React.FC = () => {
   const [viewAnchor, setViewAnchor] = React.useState<null | HTMLElement>(null);
 
   const { toggleTerminal, toggleSidebar, setViewMode } = useUIStore();
-  const { closeAllTabs, tabs } = useEditorStore();
 
   const handleFileMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setFileAnchor(event.currentTarget);

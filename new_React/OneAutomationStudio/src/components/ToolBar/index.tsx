@@ -7,11 +7,10 @@ import FolderIcon from '@mui/icons-material/Folder';
 import SearchIcon from '@mui/icons-material/Search';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useEditorStore } from '../../store/editorStore';
 import { useUIStore } from '../../store/uiStore';
 
 export const ToolBar: React.FC = () => {
-  const { toggleTerminal, toggleSidebar } = useUIStore();
+  const { toggleSidebar } = useUIStore();
 
   return (
     <div className="toolbar">

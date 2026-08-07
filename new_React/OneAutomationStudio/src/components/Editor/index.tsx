@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, Tabs, Tab, IconButton, Tooltip } from '@mui/material';
 import Editor from '@monaco-editor/react';
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,20 +7,30 @@ import type { EditorTab } from '../../types';
 
 export const CodeEditor: React.FC = () => {
   const { tabs, activeTabId, setActiveTab, removeTab, updateTab } = useEditorStore();
-  const [editorValue, setEditorValue] = useState<Record<string, string>>({});
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
   const handleEditorChange = (value: string | undefined) => {
-    if (!activeTab || !value) return;
-    setEditorValue((prev) => ({
-      ...prev,
-      [activeTab.id]: value,
-    }));
+    if (!activeTab || value === undefined) return;
     updateTab(activeTab.id, {
       content: value,
       isDirty: true,
     });
+  };
+
+  const handleEditorMount = (editor: unknown) => {
+    if (editor && typeof editor === 'object' && 'updateOptions' in editor) {
+      (editor as { updateOptions: (options: Record<string, unknown>) => void }).updateOptions({
+        minimap: { enabled: false },
+        fontSize: 13,
+        fontFamily: "'Cascadia Code', 'Fira Code', monospace",
+        scrollBeyondLastLine: false,
+        wordWrap: 'on',
+        lineNumbers: 'on',
+        automaticLayout: true,
+        tabSize: 2,
+      });
+    }
   };
 
   const getLanguageFromExtension = (filename: string): string => {
@@ -41,7 +51,7 @@ export const CodeEditor: React.FC = () => {
       html: 'html',
       css: 'css',
     };
-    return languageMap[ext!] || 'plaintext';
+    return languageMap[ext ?? ''] || 'plaintext';
   };
 
   return (
@@ -112,15 +122,20 @@ export const CodeEditor: React.FC = () => {
               <Editor
                 height="100%"
                 language={getLanguageFromExtension(activeTab.filename)}
-                value={editorValue[activeTab.id] || activeTab.content}
+                value={activeTab.content}
                 onChange={handleEditorChange}
+                onMount={handleEditorMount}
                 theme="vs-dark"
+                loading={<Box sx={{ color: '#858585', p: 2 }}>Loading editor…</Box>}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 13,
-                  fontFamily: "'Courier New', monospace",
+                  fontFamily: "'Cascadia Code', 'Fira Code', monospace",
                   scrollBeyondLastLine: false,
                   wordWrap: 'on',
+                  lineNumbers: 'on',
+                  automaticLayout: true,
+                  tabSize: 2,
                 }}
               />
             </Box>
@@ -136,7 +151,7 @@ export const CodeEditor: React.FC = () => {
             color: '#858585',
           }}
         >
-          No files open
+          Select a file from the explorer to start editing
         </Box>
       )}
     </Box>
