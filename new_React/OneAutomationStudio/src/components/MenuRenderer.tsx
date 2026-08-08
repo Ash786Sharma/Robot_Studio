@@ -8,6 +8,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import SearchIcon from '@mui/icons-material/Search';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import SettingsIcon from '@mui/icons-material/Settings';
+import uiConfig from '../assets/ui-config.json';
 import { useUIStore, type UIStore } from '../store/uiStore';
 
 type UIStateKey = 'sidebarOpen' | 'terminalOpen' | 'explorerOpen';
@@ -19,12 +20,12 @@ type UIConfigItem = {
   label?: string;
   title?: string;
   icon?: string;
-  display?: UIDisplayMode;
+  display?: UIDisplayMode | string;
   action?: string;
   payload?: string;
-  type?: 'separator';
+  type?: 'separator' | string;
   separatorAfter?: boolean;
-  state?: UIStateKey;
+  state?: UIStateKey | string;
   items?: UIConfigItem[];
 };
 
@@ -65,8 +66,8 @@ const renderItemContent = (item: UIConfigItem) => {
   }
 };
 
-const getStateValue = (state: UIStateKey | undefined, store: UIStore) => {
-  if (!state) {
+const getStateValue = (state: UIStateKey | string | undefined, store: UIStore) => {
+  if (!state || typeof state !== 'string') {
     return false;
   }
 
@@ -187,63 +188,6 @@ const renderMenuItems = (
     return nodes;
   });
 
-const menuConfig: { menuBar: UIConfigItem[] } = {
-  menuBar: [
-    {
-      id: 'file',
-      label: 'File',
-      items: [
-        { id: 'newFile', label: 'New File', action: 'noop' },
-        { id: 'openFolder', label: 'Open Folder', action: 'noop' },
-        {
-          id: 'openRecent',
-          label: 'Open Recent',
-          items: [
-            { id: 'recentProject1', label: 'Project 1', action: 'noop' },
-            { id: 'recentProject2', label: 'Project 2', action: 'noop' },
-          ],
-        },
-        { id: 'save', label: 'Save', action: 'noop' },
-        { id: 'saveAll', label: 'Save All', action: 'noop', separatorAfter: true },
-        { id: 'exit', label: 'Exit', action: 'noop' },
-      ],
-    },
-    {
-      id: 'edit',
-      label: 'Edit',
-      items: [
-        { id: 'undo', label: 'Undo', action: 'noop' },
-        { id: 'redo', label: 'Redo', action: 'noop' },
-        { id: 'cut', label: 'Cut', action: 'noop' },
-        { id: 'copy', label: 'Copy', action: 'noop' },
-        { id: 'paste', label: 'Paste', action: 'noop' },
-      ],
-    },
-    {
-      id: 'view',
-      label: 'View',
-      items: [
-        { id: 'toggleExplorer', label: 'Toggle Explorer', action: 'toggleExplorer', state: 'explorerOpen' },
-        { id: 'toggleTerminal', label: 'Toggle Terminal', action: 'toggleTerminal', state: 'terminalOpen' },
-        {
-          id: 'theme',
-          label: 'Theme',
-          items: [
-            { id: 'theme-vs-dark', label: 'VS Dark', action: 'setTheme', payload: 'vs-dark' },
-            { id: 'theme-vs-light', label: 'VS Light', action: 'setTheme', payload: 'vs-light' },
-            { id: 'theme-quiet-light', label: 'Quiet Light', action: 'setTheme', payload: 'quiet-light' },
-            { id: 'theme-high-contrast', label: 'High Contrast', action: 'setTheme', payload: 'high-contrast' },
-          ],
-        },
-        { id: 'textEditor', label: 'Text Editor', action: 'viewText' },
-        { id: 'graphEditor', label: 'Graph Editor', action: 'viewGraphical' },
-        { id: '3dView', label: '3D View', action: 'view3D' },
-        { id: 'splitView', label: 'Split View', action: 'viewSplit' },
-      ],
-    },
-  ],
-};
-
 type MenuRendererProps = {
   variant?: 'menu';
 };
@@ -255,7 +199,7 @@ export const MenuRenderer: React.FC<MenuRendererProps> = () => {
 
   return (
     <>
-      {menuConfig.menuBar.map((group) => {
+      {uiConfig.menuBar.map((group) => {
         const anchor = menuState.anchors[group.id];
         return (
           <React.Fragment key={group.id}>

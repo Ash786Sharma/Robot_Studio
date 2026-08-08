@@ -13,6 +13,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { useEditorStore } from '../../store/editorStore';
 import { useExplorerStore } from '../../store/explorerStore';
 import type { FileNode } from '../../types';
@@ -108,6 +109,13 @@ const FileTree: React.FC<FileTreeProps> = ({ files, onSelectFile, searchQuery })
                 <Tooltip title="Add file">
                   <IconButton size="small" sx={{ padding: '2px' }}>
                     <AddIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {node.type === 'file' && (
+                <Tooltip title="edit file">
+                  <IconButton size="small" sx={{ padding: '2px' }}>
+                    <EditIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               )}

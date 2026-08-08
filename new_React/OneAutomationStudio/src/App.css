@@ -77,18 +77,39 @@
 }
 
 .menu-item {
-  background: none;
+  background: transparent;
   border: none;
   color: var(--ui-text);
   padding: 6px 12px;
   font-size: 13px;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s;
+  transition: color 0.2s, background-color 0.2s;
+}
+.theme-toggle-button {
+  margin-left: auto;
+  margin-right: 12px;
+  color: var(--ui-text);
 }
 
+.theme-toggle-button:hover {
+  background-color: transparent;
+  color: var(--ui-primary);
+}
 .menu-item:hover {
-  background-color: var(--ui-hover);
+  color: var(--ui-primary);
+}
+
+.menu-item:focus-visible {
+  color: var(--ui-primary);
+  outline: 1px solid var(--ui-primary);
+  outline-offset: 2px;
+}
+
+
+.menu-item:focus-visible {
+  outline: 1px solid var(--ui-primary);
+  outline-offset: 2px;
 }
 
 /* Tabs */
@@ -312,31 +333,41 @@
 
 /* Toolbar */
 .toolbar {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 4px;
+  padding: 4px 8px;
   background-color: var(--ui-toolbar-bg);
   border-bottom: 1px solid var(--ui-border);
   height: auto;
 }
 
 .toolbar-button {
-  background: none;
+  background: transparent;
   border: none;
-  color: var(--ui-text);
+  color: var(--ui-text-secondary);
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 4px 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 2px;
-  transition: all 0.2s;
+  text-decoration: none;
+  border-bottom: none;
+  transition: color 0.2s, transform 0.2s;
 }
 
 .toolbar-button:hover {
-  background-color: var(--ui-border);
-  color: var(--ui-text);
+  background-color: transparent;
+  color: var(--ui-primary);
+}
+
+.toolbar-button svg {
+  transition: transform 0.2s ease;
+}
+
+.toolbar-button:hover svg {
+  transform: scale(1.12);
 }
 
 .toolbar-separator {

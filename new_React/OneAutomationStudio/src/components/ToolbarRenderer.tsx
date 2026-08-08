@@ -6,6 +6,7 @@ import BugReportIcon from '@mui/icons-material/BugReport';
 import FolderIcon from '@mui/icons-material/Folder';
 import SearchIcon from '@mui/icons-material/Search';
 import SettingsIcon from '@mui/icons-material/Settings';
+import uiConfig from '../assets/ui-config.json';
 import { useUIStore, type UIStore } from '../store/uiStore';
 
 type UIStateKey = 'sidebarOpen' | 'terminalOpen' | 'explorerOpen';
@@ -17,12 +18,12 @@ type UIConfigItem = {
   label?: string;
   title?: string;
   icon?: string;
-  display?: UIDisplayMode;
+  display?: UIDisplayMode | string;
   action?: string;
   payload?: string;
-  type?: 'separator';
+  type?: 'separator' | string;
   separatorAfter?: boolean;
-  state?: UIStateKey;
+  state?: UIStateKey | string;
   items?: UIConfigItem[];
 };
 
@@ -62,8 +63,8 @@ const renderItemContent = (item: UIConfigItem) => {
   }
 };
 
-const getStateValue = (state: UIStateKey | undefined, store: UIStore) => {
-  if (!state) {
+const getStateValue = (state: UIStateKey | string | undefined, store: UIStore) => {
+  if (!state || typeof state !== 'string') {
     return false;
   }
 
@@ -96,6 +97,10 @@ const renderToolbarItems = (
   store: UIStore,
 ) =>
   items.flatMap((item) => {
+    if (item.type === 'separator') {
+      return <div key={item.id} className="toolbar-separator" />;
+    }
+
     const nodes: React.ReactNode[] = [
       <button
         key={item.id}
@@ -119,21 +124,11 @@ const renderToolbarItems = (
     return nodes;
   });
 
-const toolbarConfig: UIConfigItem[] = [
-  { id: 'save', label: 'Save', icon: 'Save', display: 'icon', title: 'Save (Ctrl+S)', action: 'noop' },
-  { id: 'saveAll', label: 'Save All', icon: 'Save', display: 'icon', title: 'Save All (Ctrl+Shift+S)', action: 'noop' },
-  { id: 'build', label: 'Build', icon: 'Build', display: 'icon', title: 'Build', action: 'noop' },
-  { id: 'run', label: 'Run', icon: 'PlayArrow', display: 'icon', title: 'Run (F5)', action: 'noop' },
-  { id: 'debug', label: 'Debug', icon: 'BugReport', display: 'icon', title: 'Debug', action: 'noop', separatorAfter: true },
-  { id: 'explorer', label: 'Explorer', icon: 'Folder', display: 'both', title: 'Explorer', action: 'toggleSidebar' },
-  { id: 'search', label: 'Search', icon: 'Search', display: 'icon', title: 'Search', action: 'noop' },
-  { id: 'sourceControl', label: 'Source Control', display: 'text', title: 'Source Control', action: 'noop' },
-  { id: 'settings', label: 'Settings', icon: 'Settings', display: 'both', title: 'Settings', action: 'noop' },
-];
+
 
 export const ToolbarRenderer: React.FC = () => {
   const store = useUIStore();
   const actionHandlers = getActionHandlers(store);
 
-  return <>{renderToolbarItems(toolbarConfig, actionHandlers, store)}</>;
+  return <>{renderToolbarItems(uiConfig.toolBar, actionHandlers, store)}</>;
 };
