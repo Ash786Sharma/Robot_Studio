@@ -26,6 +26,7 @@
     "lucide-react": "^1.35.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-resizable-panels": "^4.12.3",
     "react-xtermjs": "^1.0.12",
     "shadcn": "^4.19.0",
     "tailwind-merge": "^3.6.0",
