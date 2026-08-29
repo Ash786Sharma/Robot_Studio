@@ -2,7 +2,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query'
-import IdeLayout from './IdeLayout'
+import IdeLayout from './features/ideUi/IdeLayout'
 import './App.css'
 
 
