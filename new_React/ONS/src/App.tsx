@@ -3,7 +3,6 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import IdeLayout from './features/ideUi/IdeLayout'
-import './App.css'
 
 
 const queryClient = new QueryClient()

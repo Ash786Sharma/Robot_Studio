@@ -13,6 +13,8 @@ interface IdeBarItemProps {
   icon?: ReactNode;
   className?: string;
   onClick?: () => void;
+  isActive?: boolean;
+  side?: "top" | "right" | "bottom" | "left";
 }
 
 export function IdeBarItem({
@@ -23,7 +25,9 @@ export function IdeBarItem({
   icon,
   className,
   onClick,
-  children
+  children,
+  isActive,
+  side = "top"
 }: IdeBarItemProps & { children?: ReactNode }) {
   
   // 1. Build the base button if no custom render target (like an Input) is passed
@@ -33,15 +37,19 @@ export function IdeBarItem({
       size="sm"
       onClick={onClick}
       className={cn(
-        "group cursor-pointer h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md transition-colors",
+        // 3. Changed default text configuration to handle cascading text states cleanly
+        "group cursor-pointer h-6.5 px-2 bg-transparent font-medium gap-1.5 rounded-md transition-all select-none duration-150 border text-current",
+        isActive 
+          ? "bg-ide-active text-foreground border-border shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-ide-active" 
+          : "text-ide-inactive border-transparent hover:bg-ide-hover hover:text-foreground active:scale-[0.98]",
         className
       )}
     >
          {/* If children are provided, render them; otherwise fallback to icon/text props */}
       {children ? children : (
         <>
-          {icon}
-          {text && <span>{text}</span>}
+          {icon && <span className="text-current flex items-center justify-center shrink-0">{icon}</span>}
+          {text && <span className="text-current font-medium tracking-wide">{text}</span>}
         </>
       )}
     </Button>
@@ -53,9 +61,9 @@ export function IdeBarItem({
       <TooltipTrigger render={triggerElement} />
       
       <TooltipContent
-        side="top"
-        className="flex items-center gap-2 text-xs bg-slate-950 text-slate-200 px-2.5 py-1.5 rounded-md filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))]"
-      >
+        side={side}
+        sideOffset={6}
+        className="shadow-ide-md"      >
         <span>{tooltip}</span>
         
         {/* 3. Base UI style dynamic shortcut collection */}

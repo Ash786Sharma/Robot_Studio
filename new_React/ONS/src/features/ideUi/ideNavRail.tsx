@@ -1,4 +1,4 @@
-import { Terminal, FolderTree, Settings, ShieldAlert, Menu } from "lucide-react"
+import { Terminal, FolderTree, Settings, ShieldAlert, Menu, Box, Move3D, GitBranch } from "lucide-react"
 import { IdeBarItem } from "@/features/ideUi/ideBarItem"
 
 export const IdeNavRail = () => {
@@ -10,22 +10,34 @@ export const IdeNavRail = () => {
         {/* 1. Toggle Side Bar Menu */}
         <IdeBarItem
           tooltip="Toggle Menu"
-          shortcutKeys={["Ctrl", "B"]}
+          side="right"
+          shortcutKeys={["Ctrl", "M"]}
           icon={<Menu className="h-5 w-5" />}
-          className="h-10 w-10 rounded-xl"
+          className="h-10 w-10 rounded-xl "
         />
 
         {/* 2. Project File Explorer (Active State Example) */}
         <IdeBarItem
           tooltip="Explorer"
+          side="right"
           shortcutKeys={["Ctrl", "Shift", "E"]}
           icon={<FolderTree className="h-5 w-5" />}
-          className="h-10 w-10 rounded-xl bg-slate-800/40 text-slate-100 border border-slate-700/50 hover:bg-slate-800/60"
+          className="h-10 w-10 rounded-xl"
+          isActive={true} // Clean parameter toggle handles styles dynamically
+        />
+
+        <IdeBarItem
+          tooltip="3D Viewer"
+          side="right"
+          shortcutKeys={["Ctrl","Shift", "D"]}
+          icon={<Box className="h-5 w-5" />}
+          className="h-10 w-10 rounded-xl "
         />
 
         {/* 3. Integrated Terminal View */}
         <IdeBarItem
           tooltip="Terminal"
+          side="right"
           shortcutKeys={["Ctrl", "`"]}
           icon={<Terminal className="h-5 w-5" />}
           className="h-10 w-10 rounded-xl"
@@ -34,6 +46,7 @@ export const IdeNavRail = () => {
         {/* 4. Active Project Error Diagnostics */}
         <IdeBarItem
           tooltip="Problems"
+          side="right"
           shortcutKeys={["Ctrl", "Shift", "M"]}
           icon={<ShieldAlert className="h-5 w-5" />}
           className="h-10 w-10 rounded-xl"
@@ -45,6 +58,7 @@ export const IdeNavRail = () => {
         {/* 5. Workspace Configuration Panel */}
         <IdeBarItem
           tooltip="Settings"
+          side="right"
           shortcutKeys={["Ctrl", ","]}
           icon={<Settings className="h-5 w-5" />}
           className="h-10 w-10 rounded-xl"

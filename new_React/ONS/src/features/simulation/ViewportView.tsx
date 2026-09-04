@@ -2,7 +2,7 @@ import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import { OrbitControls, Grid } from '@react-three/drei';
-import { useIDEStore } from '../../core/store/ideStore';
+import { useIDEStore } from '../../core/store/themeStore';
 
 const RoboticArmModel: React.FC = () => {
   // Bind directly to structural transform vectors from the Zustand core
