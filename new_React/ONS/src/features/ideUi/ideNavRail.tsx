@@ -1,28 +1,58 @@
-
 import { Terminal, FolderTree, Settings, ShieldAlert, Menu } from "lucide-react"
+import { IdeBarItem } from "@/features/ideUi/ideBarItem"
 
-export const IdeNavRail = ()=>{
-    return (
-        <nav className="w-12 flex flex-col justify-between items-center py-1 h-full shrink-0">
-          <div className="flex flex-col gap-4 w-full items-center">
-            <button className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800/80 hover:text-slate-100 ">
-              <Menu className="h-5 w-5" />
-            </button>
-            <button className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-800/40 text-slate-100 border border-slate-700/50">
-              <FolderTree className="h-5 w-5" />
-            </button>
-            <button className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800/80 hover:text-slate-100 ">
-              <Terminal className="h-5 w-5" />
-            </button>
-            <button className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800/80 hover:text-slate-100">
-              <ShieldAlert className="h-5 w-5" />
-            </button>
-          </div>
-          <button className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800/80 hover:text-slate-100">
-            <Settings className="h-5 w-5" />
-          </button>
-        </nav>
-    )
+export const IdeNavRail = () => {
+  return (
+    <nav className="w-12 flex flex-col justify-between items-center py-2 h-full shrink-0 ">
+      
+      {/* Top Section Actions */}
+      <div className="flex flex-col gap-4 w-full items-center">
+        {/* 1. Toggle Side Bar Menu */}
+        <IdeBarItem
+          tooltip="Toggle Menu"
+          shortcutKeys={["Ctrl", "B"]}
+          icon={<Menu className="h-5 w-5" />}
+          className="h-10 w-10 rounded-xl"
+        />
+
+        {/* 2. Project File Explorer (Active State Example) */}
+        <IdeBarItem
+          tooltip="Explorer"
+          shortcutKeys={["Ctrl", "Shift", "E"]}
+          icon={<FolderTree className="h-5 w-5" />}
+          className="h-10 w-10 rounded-xl bg-slate-800/40 text-slate-100 border border-slate-700/50 hover:bg-slate-800/60"
+        />
+
+        {/* 3. Integrated Terminal View */}
+        <IdeBarItem
+          tooltip="Terminal"
+          shortcutKeys={["Ctrl", "`"]}
+          icon={<Terminal className="h-5 w-5" />}
+          className="h-10 w-10 rounded-xl"
+        />
+
+        {/* 4. Active Project Error Diagnostics */}
+        <IdeBarItem
+          tooltip="Problems"
+          shortcutKeys={["Ctrl", "Shift", "M"]}
+          icon={<ShieldAlert className="h-5 w-5" />}
+          className="h-10 w-10 rounded-xl"
+        />
+      </div>
+
+      {/* Bottom Section Actions */}
+      <div className="w-full flex flex-col items-center">
+        {/* 5. Workspace Configuration Panel */}
+        <IdeBarItem
+          tooltip="Settings"
+          shortcutKeys={["Ctrl", ","]}
+          icon={<Settings className="h-5 w-5" />}
+          className="h-10 w-10 rounded-xl"
+        />
+      </div>
+
+    </nav>
+  )
 }
 
 export default IdeNavRail

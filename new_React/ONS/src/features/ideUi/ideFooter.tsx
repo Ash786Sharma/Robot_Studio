@@ -2,193 +2,76 @@ import { GitBranch,
   RefreshCw,
   XCircle,
   AlertTriangle,
-  Bell } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+  Bell, Braces } from "lucide-react"
 import { ButtonGroup } from "@/components/ui/button-group";
+import {IdeBarItem} from "@/features/ideUi/ideBarItem"
 
 export const IdeFooter = () =>{
     return (
         <footer className="h-6 w-full flex items-center justify-between px-2 text-xs text-slate-500 font-normal shrink-0 select-none ">
-        
         {/* Left Side Elements */}
         <div className="flex items-center h-full">
-          {/* Remote Environment Indicator (Uses matching indigo accent text instead of blue bg) */}
-          <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md "
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                <span>ONS: UR5</span>
-              </Button>
-            } 
-          />
-          <TooltipContent side="top" className="text-xs bg-slate-950 text-slate-200 filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))] ">
-            Connected to Remote Server
-          </TooltipContent>
-        </Tooltip>
-
+          <IdeBarItem 
+        tooltip="Connected to Remote Server"
+        icon={<span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />}
+        text="ONS: UR5"
+      />
           {/* Git Status Group */}
           <ButtonGroup>
   {/* 1. Git Branch Tooltip */}
-  <Tooltip>
-    <TooltipTrigger
-      render={
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="ml-1 h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md"
-        >
-          <GitBranch className="h-3 w-3 text-slate-500" />
-          <span>main*</span>
-        </Button>
-      } 
-    />
-    <TooltipContent 
-      side="top" 
-      className="text-xs bg-slate-950 text-slate-200 px-2.5 py-1.5 rounded-md filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))]"
-    >
-      Git Repository: Current Active Branch
-    </TooltipContent>
-  </Tooltip>
-
+  <IdeBarItem 
+        tooltip="Git Repository: Current Active Branch"
+        icon={<GitBranch className="h-3 w-3 text-slate-500 group-hover:text-slate-100 transition-colors" />}
+        text="main*"
+        className="ml-1"
+      />
   {/* 2. Refresh Sync Tooltip */}
-  <Tooltip>
-    <TooltipTrigger
-      render={
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-6.5 px-1 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md"
-        >
-          <RefreshCw className="h-2.5 w-2.5 ml-0.5 text-slate-500 animate-[spin_4s_linear_infinite]" />
-        </Button>
-      } 
-    />
-    <TooltipContent 
-      side="top" 
-      className="text-xs bg-slate-950 text-slate-200 px-2.5 py-1.5 rounded-md filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))]"
-    >
-      Synchronise Changes with Remote Server
-    </TooltipContent>
-  </Tooltip>
+  <IdeBarItem 
+        tooltip="Synchronise Changes with Remote Server"
+        icon={<RefreshCw className="h-2.5 w-2.5 text-slate-500 animate-[spin_4s_linear_infinite]" />}
+        className="px-1 mr-1"
+      />
 </ButtonGroup>
-
-
           {/* Errors & Warnings Tracker */}
-           <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md "
-              >
-                <XCircle className="h-3 w-3 text-rose-500" />
+          <IdeBarItem 
+        tooltip="Error/Warning">
+          <XCircle className="h-3 w-3 text-rose-500" />
               <span>0</span>
               <AlertTriangle className="h-3 w-3 text-amber-500" />
               <span>2</span>
-              </Button>
-            } 
-          />
-          <TooltipContent side="top" className="text-xs bg-slate-950 text-slate-200 filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))] ">
-            Error/Warning
-          </TooltipContent>
-        </Tooltip>
+        </IdeBarItem>
         </div>
         <div className="flex items-center h-full gap-1 pr-1">
-            <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md "
-              >
-                <span className="hover:bg-slate-900 hover:text-slate-200 h-full px-2 flex items-center cursor-pointer transition-colors rounded">
-            Ln 45, Col 12
-          </span>
-              </Button>
-            } 
-          />
-          <TooltipContent side="top" className="text-xs bg-slate-950 text-slate-200 filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))] ">
-            Error/Warning
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md "
-              >
-                <span className="hover:bg-slate-900 hover:text-slate-200 h-full px-2 flex items-center cursor-pointer transition-colors rounded">
-            Spaces: 2
-          </span>
-              </Button>
-            } 
-          />
-          <TooltipContent side="top" className="text-xs bg-slate-950 text-slate-200 filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))] ">
-            Error/Warning
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md "
-              >
-                <span className="hover:bg-slate-900 hover:text-slate-200 h-full px-2 flex items-center cursor-pointer transition-colors rounded">
-            UTF-8
-          </span>
-              </Button>
-            } 
-          />
-          <TooltipContent side="top" className="text-xs bg-slate-950 text-slate-200 filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))] ">
-            Error/Warning
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md "
-              >
-                <span className="hover:bg-slate-900 hover:text-slate-200 h-full px-2 flex items-center cursor-pointer transition-colors rounded">
-            TypeScript JSX
-          </span>
-              </Button>
-            } 
-          />
-          <TooltipContent side="top" className="text-xs bg-slate-950 text-slate-200 filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))] ">
-            Error/Warning
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6.5 px-2 bg-slate-900 text-slate-300 hover:bg-slate-800 hover:text-slate-100 font-medium gap-1.5 rounded-md "
-              >
-                <Bell className="h-3 w-3" />
-              </Button>
-            } 
-          />
-          <TooltipContent side="top" className="text-xs bg-slate-950 text-slate-200 filter-[drop-shadow(0_0_1px_rgba(51,65,85,1))_drop-shadow(0_10px_8px_rgba(0,0,0,0.4))] ">
-            Error/Warning
-          </TooltipContent>
-        </Tooltip>
+            <IdeBarItem 
+        tooltip="Go to Line/Column" 
+        text="Ln 45, Col 12" 
+        className="group"
+      />
+
+      {/* 2. Indentation Configuration */}
+      <IdeBarItem 
+        tooltip="Select Indentation" 
+        text="Spaces: 2" 
+      />
+
+      {/* 3. File Encoding Settings */}
+      <IdeBarItem 
+        tooltip="Select Encoding" 
+        text="UTF-8" 
+      />
+
+      {/* 4. Language Mode Selector */}
+      <IdeBarItem 
+        tooltip="Select Language Mode" 
+        icon={<Braces className="h-3 w-3" />} // Kept small to match your bell icon layout scale
+        text="TypeScript JSX" 
+      />
+
+      {/* 5. Notification Bell Icon */}
+      <IdeBarItem 
+        tooltip="Notification" 
+        icon={<Bell className="h-3 w-3" />} 
+      />
         </div>
         
       </footer>
