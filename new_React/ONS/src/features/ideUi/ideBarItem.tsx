@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils"
 interface IdeBarItemProps {
   tooltip: string;
   shortcutKeys?: string[];
-  // render override allows passing input fields or custom elements down to the Base UI trigger
   render?: React.ReactElement; 
   text?: string;
   icon?: ReactNode;
@@ -30,26 +29,31 @@ export function IdeBarItem({
   side = "top"
 }: IdeBarItemProps & { children?: ReactNode }) {
   
-  // 1. Build the base button if no custom render target (like an Input) is passed
-  const triggerElement = render || (
+  const defaultButton = (
     <Button
       variant="ghost"
       size="sm"
       onClick={onClick}
       className={cn(
-        // 3. Changed default text configuration to handle cascading text states cleanly
-        "group cursor-pointer h-6.5 px-2 bg-transparent font-medium gap-1.5 rounded-md transition-all select-none duration-150 border text-current",
+        "group cursor-pointer h-6.5 px-2 font-medium gap-1.5 rounded-md transition-all select-none duration-150 border",
+        
+        // ⚡ FIXED CONFLICTING HOVER LOOPS:
+        // Hover modifications are restricted to the inactive branch state. Active state remains immutable.
         isActive 
-          ? "bg-ide-active text-foreground border-border shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-ide-active" 
-          : "text-ide-inactive border-transparent hover:bg-ide-hover hover:text-foreground active:scale-[0.98]",
+          ? "bg-ide-active text-foreground border-border" 
+          : "bg-transparent text-ide-inactive border-transparent hover:bg-ide-hover hover:text-foreground active:scale-[0.98]",
+        
+        // Dynamic edge lighting for dark layouts
+        isActive && "dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+        
         className
       )}
     >
-         {/* If children are provided, render them; otherwise fallback to icon/text props */}
       {children ? children : (
         <>
-          {icon && <span className="text-current flex items-center justify-center shrink-0">{icon}</span>}
-          {text && <span className="text-current font-medium tracking-wide">{text}</span>}
+          {/* ⚡ Replaced text-inherit with text-current to respect active transitions instantly */}
+          {icon && <span className="flex items-center justify-center shrink-0 text-current">{icon}</span>}
+          {text && <span className="font-medium tracking-wide text-current">{text}</span>}
         </>
       )}
     </Button>
@@ -57,24 +61,25 @@ export function IdeBarItem({
 
   return (
     <Tooltip>
-      {/* 2. Match Base UI's render prop signature pattern */}
-      <TooltipTrigger render={triggerElement} />
+      <TooltipTrigger render={render || defaultButton} />
       
-      <TooltipContent
-        side={side}
-        sideOffset={6}
-        className="shadow-ide-md"      >
-        <span>{tooltip}</span>
+      <TooltipContent 
+        side={side} 
+        sideOffset={6} 
+        className="flex items-center gap-2 py-2.5 min-h-9 in-[.theme-dracula_&]:[--border:#44475a]"
+      >
+        <span className="font-medium tracking-wide text-xs">{tooltip}</span>
         
-        {/* 3. Base UI style dynamic shortcut collection */}
         {shortcutKeys && shortcutKeys.length > 0 && (
           <KbdGroup className="flex items-center gap-0.5 ml-1">
             {shortcutKeys.map((key, index) => (
-              <span key={key} className="flex items-center gap-0.5">
-                <Kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-1 rounded border border-slate-700 bg-slate-800 px-1.5 font-mono text-[10px] font-medium text-slate-400">
-                  <span className="text-xs">{key}</span>
+              <span key={`${key}-${index}`} className="flex items-center gap-0.5">
+                <Kbd className="pointer-events-none inline-flex h-4.5 select-none items-center gap-1 rounded border border-ide-kbd-border bg-ide-kbd px-1.5 font-mono text-[10px] font-semibold text-ide-inactive shadow-[0_1px_0_rgba(0,0,0,0.1)]">
+                  {key}
                 </Kbd>
-                {index < shortcutKeys.length - 1 && <span className="text-slate-500 text-[10px]">+</span>}
+                {index < shortcutKeys.length - 1 && (
+                  <span className="text-ide-inactive text-[10px] font-bold">+</span>
+                )}
               </span>
             ))}
           </KbdGroup>

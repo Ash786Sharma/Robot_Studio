@@ -224,6 +224,111 @@
   --ide-kbd-border: #3b4261;
   --ide-tooltip-shadow: rgba(0, 0, 0, 0.6);
 }
+/* 💻 THEME 6: HIGH CONTRAST (ACCESSIBILITY OPTIMISED) */
+.theme-high-contrast {
+  --background: oklch(0 0 0);
+  --card: oklch(0 0 0);
+  --popover: oklch(0 0 0);
+  --border: oklch(1 0 0);
+  --foreground: oklch(1 0 0);
+  --muted-foreground: oklch(0.75 0 0);
+  --primary: oklch(0.6 0.25 290);
+  --primary-foreground: oklch(0 0 0);
+  --accent: oklch(0.2 0 0);
+  --accent-foreground: oklch(1 0 0);
+  
+  --ide-panel-bg: oklch(0 0 0);
+  --ide-surface-bg: oklch(0.05 0 0);
+  --ide-text-inactive: oklch(0.8 0 0);
+  
+  /* ⚡ FIXED HIGH CONTRAST ACTIVE STATES */
+  --ide-item-hover: oklch(0.15 0 0);
+  --ide-item-active: oklch(0.3 0 0);
+
+  --ide-kbd-bg: oklch(0.1 0 0);
+  --ide-kbd-border: oklch(1 0 0);
+  --ide-tooltip-shadow: transparent;
+}
+
+/* 💻 THEME 7: GITHUB DARK */
+.theme-github-dark {
+  --background: #0d1117;
+  --card: #161b22;
+  --popover: #161b22;
+  --border: #30363d;
+  --foreground: #c9d1d9;
+  --muted-foreground: #8b949e;
+  --primary: #1f6feb;
+  --primary-foreground: #ffffff;
+  --accent: #21262d;
+  --accent-foreground: #ffffff;
+
+  --ide-panel-bg: #010409;
+  --ide-surface-bg: #0d1117;
+  --ide-text-inactive: #8b949e;
+  
+  /* ⚡ FIXED GITHUB DARK ACTIVE STATES */
+  --ide-item-hover: #21262d;
+  --ide-item-active: #30363d;
+
+  --ide-kbd-bg: #161b22;
+  --ide-kbd-border: #30363d;
+  --ide-tooltip-shadow: rgba(0, 0, 0, 0.6);
+}
+
+/* 💻 THEME 8: GRUVBOX DARK (RETRO WARM) */
+.theme-gruvbox {
+  --background: #282828;
+  --card: #1d2021;
+  --popover: #1d2021;
+  --border: #3c3836;
+  --foreground: #ebdbb2;
+  --muted-foreground: #a89984;
+  --primary: #fe8019;
+  --primary-foreground: #282828;
+  --accent: #32302f;
+  --accent-foreground: #fbf1c7;
+
+  --ide-panel-bg: #1d2021;
+  --ide-surface-bg: #282828;
+  --ide-text-inactive: #928374;
+  
+  /* ⚡ FIXED GRUVBOX ACTIVE STATES */
+  --ide-item-hover: #3c3836;
+  --ide-item-active: #504945;
+
+  --ide-kbd-bg: #32302f;
+  --ide-kbd-border: #665c54;
+  --ide-tooltip-shadow: rgba(0, 0, 0, 0.4);
+}
+
+/* 💻 THEME 9: SOLARIZED LIGHT */
+.theme-solarized-light {
+  --background: #fdf6e3;
+  --card: #eee8d5;
+  --popover: #eee8d5;
+  --border: #d5c4a1;
+  --foreground: #657b83;
+  --muted-foreground: #93a1a1;
+  --primary: #268bd2;
+  --primary-foreground: #fdf6e3;
+  --accent: #eee8d5;
+  --accent-foreground: #586e75;
+
+  --ide-panel-bg: #eee8d5;
+  --ide-surface-bg: #fdf6e3;
+  --ide-text-inactive: #93a1a1;
+  
+  /* ⚡ FIXED SOLARIZED LIGHT ACTIVE STATES */
+  --ide-item-hover: #e0d9c5;
+  --ide-item-active: #d5c4a1;
+
+  --ide-kbd-bg: #fdf6e3;
+  --ide-kbd-border: #93a1a1;
+  --ide-tooltip-shadow: rgba(0, 0, 0, 0.1);
+}
+
+
 
 html,
 body {
@@ -270,6 +375,7 @@ body {
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
+  --shadow-ide: 0 4px 12px var(--ide-tooltip-shadow), 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 @layer base {

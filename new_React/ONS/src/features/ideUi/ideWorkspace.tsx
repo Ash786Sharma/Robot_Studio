@@ -4,50 +4,60 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 
-export const IdeWorkspace =()=>{
-    return(
-        <main className="flex-1 h-full min-w-0">
-        <div className="h-full w-full rounded-xl overflow-hidden">
+export const IdeWorkspace = () => {
+  return (
+    <main className="flex-1 h-full min-w-0 bg-background text-foreground select-none">
+      {/* ⚡ REDUCED OUTER EDGE GAP: Dropped padding to p-0.5 for a flush, tight layout grid */}
+      <div className="h-full w-full overflow-hidden p-0.5 bg-ide-panel">
         <ResizablePanelGroup
           orientation="horizontal"
           className="h-full w-full border-none"
         >
-          {/* Panel One */}
-          <ResizablePanel defaultSize={20} className="rounded-xl border border-slate-800 bg-slate-950">
-            <div className="flex h-full items-center justify-center p-6 text-slate-200">
-              <span className="font-semibold">One</span>
+          {/* Panel One: Sidebar File Explorer */}
+          <ResizablePanel 
+            defaultSize={20} 
+            className="rounded-sm border border-border bg-ide-panel transition-colors duration-150"
+          >
+            <div className="flex h-full items-center justify-center p-6 text-ide-inactive">
+              <span className="font-semibold text-xs tracking-wide">SIDEBAR / EXPLORER</span>
             </div>
           </ResizablePanel>
 
-          {/* Vertical Separator: Structural width automatically adjusts to 6px (w-1.5) */}
+          {/* ⚡ FLUSH SEPARATOR HANDLE */}
           <ResizableHandle 
             withHandle 
-            className="bg-transparent border-none " 
-            dotsClassName="group-hover:bg-slate-400"
+            className="bg-transparent border-none"
+            dotsClassName="bg-foreground/40 group-hover:bg-primary"
           />
 
-          {/* Inner Panel Stack */}
-          <ResizablePanel defaultSize={80} className="rounded-xl">
+          {/* Core Code Split Stack */}
+          <ResizablePanel defaultSize={80}>
             <ResizablePanelGroup orientation="vertical" className="border-none">
               
-              {/* Panel Two */}
-              <ResizablePanel defaultSize={70} className="rounded-xl border border-slate-800 bg-slate-950">
-                <div className="flex h-full items-center justify-center p-6 text-slate-200">
-                  <span className="font-semibold">Two</span>
+              {/* Panel Two: Primary Code Workspace Surface */}
+              <ResizablePanel 
+                defaultSize={70} 
+                className="rounded-sm border border-border bg-ide-surface transition-colors duration-150"
+              >
+                <div className="flex h-full items-center justify-center p-6 text-foreground">
+                  <span className="font-semibold text-xs tracking-wide">EDITOR CANVAS</span>
                 </div>
               </ResizablePanel>
 
-              {/* Horizontal Separator: Structural height automatically adjusts to 6px (h-1.5) */}
+              {/* ⚡ FLUSH SEPARATOR HANDLE */}
               <ResizableHandle 
                 withHandle 
-                dotsClassName="group-hover:bg-slate-400" 
-                className="bg-transparent border-none " 
+                className="bg-transparent border-none"
+                dotsClassName="bg-foreground/40 group-hover:bg-primary"
               />
 
-              {/* Panel Three */}
-              <ResizablePanel defaultSize={30} className="rounded-xl border border-slate-800 bg-slate-950">
-                <div className="flex h-full items-center justify-center p-6 text-slate-200">
-                  <span className="font-semibold">Three</span>
+              {/* Panel Three: Diagnostic Console/Terminal Window */}
+              <ResizablePanel 
+                defaultSize={30} 
+                className="rounded-sm border border-border bg-ide-panel transition-colors duration-150"
+              >
+                <div className="flex h-full items-center justify-center p-6 text-ide-inactive">
+                  <span className="font-semibold text-xs tracking-wide">TERMINAL / CONSOLE</span>
                 </div>
               </ResizablePanel>
 
@@ -55,6 +65,6 @@ export const IdeWorkspace =()=>{
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-       </main>
-    )
+    </main>
+  )
 }

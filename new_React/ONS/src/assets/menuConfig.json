@@ -1,0 +1,47 @@
+[
+  {
+    "groupId": "project-actions",
+    "items": [
+      {
+        "id": "new-project",
+        "type": "action",
+        "text": "Create New Project",
+        "iconName": "Plus",
+        "actionName": "createNewProject"
+      },
+      {
+        "id": "open-project",
+        "type": "action",
+        "text": "Open Existing Project",
+        "iconName": "FolderOpen",
+        "actionName": "openExistingProject"
+      }
+    ]
+  },
+  {
+    "groupId": "appearance",
+    "hasSeparatorBefore": true,
+    "items": [
+      {
+        "id": "theme-switcher",
+        "type": "theme-selector",
+        "text": "Select Theme",
+        "iconName": "Palette"
+      }
+    ]
+  },
+  {
+    "groupId": "danger-zone",
+    "hasSeparatorBefore": true,
+    "items": [
+      {
+        "id": "close-project",
+        "type": "action",
+        "text": "Close Project",
+        "iconName": "XCircle",
+        "actionName": "closeProject",
+        "variant": "danger"
+      }
+    ]
+  }
+]

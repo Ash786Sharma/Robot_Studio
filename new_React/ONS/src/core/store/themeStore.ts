@@ -6,7 +6,11 @@ export type ThemeId =
   | "theme-onedark" 
   | "theme-dracula" 
   | "theme-catppuccin" 
-  | "theme-tokyonight";
+  | "theme-tokyonight"
+  | "theme-high-contrast"
+  | "theme-github-dark"
+  | "theme-gruvbox"
+  | "theme-solarized-light";
 
 interface ThemeState {
   currentTheme: ThemeId;
@@ -19,6 +23,11 @@ export const AVAILABLE_THEMES = [
   { id: "theme-dracula", name: "Dracula Official" },
   { id: "theme-catppuccin", name: "Catppuccin Mocha" },
   { id: "theme-tokyonight", name: "Tokyo Night" },
+  // ⚡ EXTENDED ACCESSIBILITY & UTILITY IDE PROFILES
+  { id: "theme-high-contrast", name: "High Contrast (A11y)" },
+  { id: "theme-github-dark", name: "GitHub Dark" },
+  { id: "theme-gruvbox", name: "Gruvbox Retro" },
+  { id: "theme-solarized-light", name: "Solarized Light" },
 ] as const;
 
 export const useThemeStore = create<ThemeState>()(
@@ -26,20 +35,40 @@ export const useThemeStore = create<ThemeState>()(
     (set) => ({
       currentTheme: "theme-vsc-dark",
       setTheme: (themeId) => {
-        // 1. Get the root element
         const root = document.documentElement;
         
-        // 2. Safely strip all previous theme classes
+        // 1. Safely strip all previous theme classes
         AVAILABLE_THEMES.forEach((theme) => root.classList.remove(theme.id));
         
-        // 3. Inject the newly selected theme class
+        // 2. Inject the newly selected theme class
         root.classList.add(themeId);
+        
+        // 3. Handle dark/light utility mode flags dynamically
+        if (themeId === "theme-solarized-light") {
+          root.classList.remove("dark");
+        } else if (themeId !== "theme-high-contrast") {
+          root.classList.add("dark");
+        }
         
         set({ currentTheme: themeId });
       },
     }),
     {
-      name: "ons-ide-theme-storage", // Keeps the theme active even after a page refresh
+      name: "ons-ide-theme-storage",
+      // ⚡ REHYDRATION LIFECYCLE FIX: Prevents layout color flashing during hard refreshes
+      onRehydrateStorage: () => (state) => {
+        if (state?.currentTheme) {
+          const root = document.documentElement;
+          AVAILABLE_THEMES.forEach((theme) => root.classList.remove(theme.id));
+          root.classList.add(state.currentTheme);
+          
+          if (state.currentTheme === "theme-solarized-light") {
+            root.classList.remove("dark");
+          } else {
+            root.classList.add("dark");
+          }
+        }
+      }
     }
   )
 );

@@ -1,0 +1,50 @@
+{
+  "topItems": [
+    {
+      "id": "toggle-menu",
+      "tooltip": "Toggle Menu",
+      "shortcutKeys": ["Ctrl", "M"],
+      "iconName": "Menu",
+      "isMenuButton": true
+    },
+    {
+      "id": "explorer",
+      "tooltip": "Explorer",
+      "shortcutKeys": ["Ctrl", "Shift", "E"],
+      "iconName": "FolderTree",
+      "isActive": true
+    },
+    {
+      "id": "3d-viewer",
+      "tooltip": "3D Viewer",
+      "shortcutKeys": ["Ctrl", "Shift", "D"],
+      "iconName": "Box"
+    },
+    {
+      "id": "terminal",
+      "tooltip": "Terminal",
+      "shortcutKeys": ["Ctrl", "`"],
+      "iconName": "Terminal"
+    },
+    {
+      "id": "problems",
+      "tooltip": "Problems",
+      "shortcutKeys": ["Ctrl", "Shift", "P"],
+      "iconName": "ShieldAlert"
+    }
+  ],
+  "bottomItems": [
+    {
+      "id": "account",
+      "tooltip": "Account",
+      "shortcutKeys": ["Ctrl", "U"],
+      "iconName": "CircleUser"
+    },
+    {
+      "id": "settings",
+      "tooltip": "Settings",
+      "shortcutKeys": ["Ctrl", ","],
+      "iconName": "Settings"
+    }
+  ]
+}

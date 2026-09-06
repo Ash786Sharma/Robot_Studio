@@ -1,86 +1,69 @@
-import React, { type ReactNode } from "react"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { Kbd, KbdGroup } from "@/components/ui/kbd"
-import { cn } from "@/lib/utils"
+"use client"
 
-interface IdeBarItemProps {
-  tooltip: string;
-  shortcutKeys?: string[];
-  render?: React.ReactElement; 
-  text?: string;
-  icon?: ReactNode;
-  className?: string;
-  onClick?: () => void;
-  isActive?: boolean;
-  side?: "top" | "right" | "bottom" | "left";
+import React from "react"
+import { Plus, FolderOpen, XCircle } from "lucide-react"
+import { useIdeStore } from "@/core/store/ideStore"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+interface IdeMenuItemProps {
+  // ⚡ Using React.ReactElement allows Base UI's render mechanism to pass triggers down perfectly
+  menuButton: React.ReactElement 
 }
 
-export function IdeBarItem({
-  tooltip,
-  shortcutKeys,
-  render,
-  text,
-  icon,
-  className,
-  onClick,
-  children,
-  isActive,
-  side = "top"
-}: IdeBarItemProps & { children?: ReactNode }) {
-  
-  // 1. Build the base button if no custom render target (like an Input) is passed
-  const triggerElement = render || (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={onClick}
-      className={cn(
-        "group cursor-pointer h-6.5 px-2 bg-transparent font-medium gap-1.5 rounded-md transition-all select-none duration-150 border text-current",
-        isActive 
-          ? "bg-ide-active text-foreground border-border shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]" 
-          : "text-ide-inactive border-transparent hover:bg-ide-hover hover:text-foreground active:scale-[0.98]",
-        className
-      )}
-    >
-      {children ? children : (
-        <>
-          {icon && <span className="text-current flex items-center justify-center shrink-0">{icon}</span>}
-          {text && <span className="text-current font-medium tracking-wide">{text}</span>}
-        </>
-      )}
-    </Button>
-  );
+export const IdeMenuItem = ({ menuButton }: IdeMenuItemProps) => {
+  const { createNewProject, openExistingProject, closeProject } = useIdeStore()
 
   return (
-    <Tooltip>
-      <TooltipTrigger render={triggerElement} />
-      
-      {/* 2. Simplified: Let the TooltipContent primitive handle shadows, backgrounds, and arrows */}
-      <TooltipContent
-        side={side}
-        sideOffset={6}
-        className="shadow-ide-md" // Safely passes down the custom tailwind v4 shadow utility token
+    <DropdownMenu>
+      {/* ⚡ Base UI standard: render safely handles the IdeBarItem button styles without adding layout layers */}
+      <DropdownMenuTrigger render={menuButton} />
+
+      <DropdownMenuContent 
+        side="right" 
+        align="start" 
+        sideOffset={12}
+        className="min-w-52 rounded-xl p-1.5 select-none bg-[var(--popover)] border-[var(--border)] text-[var(--ide-text-inactive)] shadow-xl"
+        style={{ '--tw-shadow-color': 'var(--ide-tooltip-shadow)' } as React.CSSProperties}
       >
-        <span>{tooltip}</span>
-        
-        {/* 3. Base UI style dynamic shortcut collection */}
-        {shortcutKeys && shortcutKeys.length > 0 && (
-          <KbdGroup className="flex items-center gap-0.5 ml-1">
-            {shortcutKeys.map((key, index) => (
-              <span key={`${key}-${index}`} className="flex items-center gap-0.5">
-                {/* 4. Styled to pull explicitly from the new theme tokens inside globals.css */}
-                <Kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-1 rounded border border-ide-kbd-border bg-ide-kbd px-1.5 font-mono text-[10px] font-semibold text-ide-inactive shadow-[0_1px_0_rgba(0,0,0,0.15)]">
-                  {key}
-                </Kbd>
-                {index < shortcutKeys.length - 1 && (
-                  <span className="text-ide-inactive text-[10px] mx-0.5 font-bold opacity-60">+</span>
-                )}
-              </span>
-            ))}
-          </KbdGroup>
-        )}
-      </TooltipContent>
-    </Tooltip>
+        <DropdownMenuGroup className="flex flex-col gap-0.5">
+          <DropdownMenuItem 
+            onClick={createNewProject}
+            className="flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-[var(--ide-text-inactive)] data-[highlighted]:bg-[var(--ide-item-hover)] data-[highlighted]:text-[var(--foreground)]"
+          >
+            <Plus className="h-4 w-4 text-current shrink-0" />
+            <span className="flex-1 tracking-wide">Create New Project</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem 
+            onClick={openExistingProject}
+            className="flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-[var(--ide-text-inactive)] data-[highlighted]:bg-[var(--ide-item-hover)] data-[highlighted]:text-[var(--foreground)]"
+          >
+            <FolderOpen className="h-4 w-4 text-current shrink-0" />
+            <span className="flex-1 tracking-wide">Open Existing Project</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+
+        <DropdownMenuSeparator className="my-1.5 mx-1 bg-[var(--border)]" />
+
+        <DropdownMenuGroup>
+          <DropdownMenuItem 
+            onClick={closeProject}
+            className="flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-red-400 data-[highlighted]:bg-red-950/30 data-[highlighted]:text-red-400"
+          >
+            <XCircle className="h-4 w-4 shrink-0" />
+            <span className="flex-1 tracking-wide">Close Project</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
+
+export default IdeMenuItem
