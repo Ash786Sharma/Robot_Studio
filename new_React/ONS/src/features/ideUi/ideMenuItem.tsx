@@ -1,12 +1,12 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
+import { createPortal } from "react-dom"
 import * as LucideIcons from "lucide-react"
 import { useIdeStore } from "@/core/store/ideStore"
-import { useThemeStore, AVAILABLE_THEMES, type ThemeId } from "@/core/store/themeStore"
+import { useMenuStore } from "@/core/store/menuStore"
 import { cn } from "@/lib/utils"
 
-// ⚡ Import all components explicitly from your working layout file configuration
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,121 +14,171 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal, 
 } from "@/components/ui/dropdown-menu"
 
-import menuConfig from "@/assets/menuConfig.json"
-
-interface IdeMenuItemProps {
-  menuButton: React.ReactElement 
-}
-
-interface MenuItemData {
+export interface MenuItemData {
   id: string;
-  type: "action" | "theme-selector";
   text: string;
-  iconName: keyof typeof LucideIcons;
-  actionName?: "createNewProject" | "openExistingProject" | "closeProject";
-  variant?: "danger";
+  iconName: string; 
+  actionName?: string; 
+  variant?: string;
+  hasSeparatorBefore?: boolean;
+  children?: MenuItemData[]; 
 }
 
-interface MenuGroupData {
+export interface MenuGroupData {
   groupId: string;
   hasSeparatorBefore?: boolean;
   items: MenuItemData[];
 }
 
-export const IdeMenuItem = ({ menuButton }: IdeMenuItemProps) => {
-  const storeActions = useIdeStore()
-  const { currentTheme, setTheme } = useThemeStore()
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={menuButton} />
-
-      <DropdownMenuContent 
-        side="right" 
-        align="start" 
-        sideOffset={12}
-        className="min-w-52 rounded-xl p-1.5 select-none bg-[var(--popover)] border-[var(--border)] text-[var(--ide-text-inactive)] shadow-xl"
-        style={{ '--tw-shadow-color': 'var(--ide-tooltip-shadow)' } as React.CSSProperties}
-      >
-        {(menuConfig as MenuGroupData[]).map((group: MenuGroupData) => (
-          <React.Fragment key={group.groupId}>
-            {group.hasSeparatorBefore && (
-              <DropdownMenuSeparator className="my-1.5 mx-1 bg-[var(--border)]" />
-            )}
-
-            <DropdownMenuGroup className="flex flex-col gap-0.5">
-              {group.items.map((item) => {
-                const IconComponent = LucideIcons[item.iconName] as React.ComponentType<{ className?: string }>
-                
-                const isDanger = item.variant === "danger"
-                const itemStyles = isDanger
-                  ? "flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-red-400 data-[highlighted]:bg-red-950/30 data-[highlighted]:text-red-400"
-                  : "flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-[var(--ide-text-inactive)] data-[highlighted]:bg-[var(--ide-item-hover)] data-[highlighted]:text-[var(--foreground)]"
-
-                // ⚡ ROUTE 1: Dynamic Theme Selector matching your multi-level reference layout
-                if (item.type === "theme-selector") {
-                  return (
-                    <DropdownMenuSub key={item.id}>
-                      <DropdownMenuSubTrigger
-                       className={itemStyles}>
-                        {IconComponent && <IconComponent className="h-4 w-4 text-current shrink-0" />}
-                        <span className="flex-1 tracking-wide">{item.text}</span>
-                      </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent
-                        sideOffset={4} 
-                          className="bg-ide-panel border border-border text-foreground p-1 rounded-md min-w-48 shadow-ide focus:outline-none z-50"
-                        >
-                          {AVAILABLE_THEMES.map((theme) => {
-                            const isSelected = currentTheme === theme.id;
-                            return (
-                              <DropdownMenuItem
-                                key={theme.id}
-                                onClick={() => setTheme(theme.id as ThemeId)}
-                                className={cn(
-                                  "cursor-pointer text-xs select-none rounded px-2.5 py-1.5 outline-none transition-colors flex items-center justify-between font-medium",
-                                  isSelected 
-                                    ? "bg-ide-active text-foreground font-semibold" 
-                                    : "text-ide-inactive hover:bg-ide-hover hover:text-foreground"
-                                )}
-                              >
-                                <span>{theme.name}</span>
-                                {isSelected && (
-                                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                )}
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  )
-                }
-
-                // ROUTE 2: Render Standard Project Execution Actions
-                const targetAction = item.actionName ? storeActions[item.actionName] : undefined
-
-                return (
-                  <DropdownMenuItem 
-                    key={item.id}
-                    onClick={targetAction}
-                    className={itemStyles}
-                  >
-                    {IconComponent && <IconComponent className="h-4 w-4 text-current shrink-0" />}
-                    <span className="flex-1 tracking-wide">{item.text}</span>
-                  </DropdownMenuItem>
-                )
-              })}
-            </DropdownMenuGroup>
-          </React.Fragment>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+interface IdeMenuItemProps {
+  menuButton?: React.ReactElement 
+  config?: MenuGroupData[] | MenuItemData[] 
+  items?: MenuItemData[]           
+  level?: number 
+  // ⚡ FIXED: Added explicit props to allow standalone localized open state handling
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export default IdeMenuItem
+export const IdeMenuItem = ({ 
+  menuButton, 
+  config = [], 
+  items, 
+  level = 0,
+  open,             // ⚡ Extract local open control
+  onOpenChange      // ⚡ Extract local state mutator
+}: IdeMenuItemProps) => {
+  const storeActions = useIdeStore()
+  
+  // Extract global navigation rail Zustand state handlers
+  const globalMenu = useMenuStore()
+  
+  // ⚡ INTENT DECOUPLING CALCULATOR: 
+  // If parent passes down a manual open prop (like the file tree rows), use it.
+  // Otherwise, safely fall back onto the global navigation bar Zustand store.
+  const isCurrentlyOpen = open !== undefined ? open : globalMenu.isMenuOpen
+  const handleOpenToggle = onOpenChange !== undefined ? onOpenChange : (nextOpen: boolean) => {
+    nextOpen ? globalMenu.openMenu() : globalMenu.closeMenu()
+  }
+
+  const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
+
+  const renderMenuNode = (item: MenuItemData) => {
+    const iconKey = item.iconName as keyof typeof LucideIcons;
+    const IconComponent = LucideIcons[iconKey] as React.ComponentType<{ className?: string }>
+    
+    const isDanger = item.variant === "danger"
+    
+    const itemStyles = isDanger
+      ? "flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-red-400 data-[highlighted]:bg-red-950/30 data-[highlighted]:text-red-400"
+      : "flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-[var(--ide-text-inactive)] data-[highlighted]:bg-[var(--ide-item-hover)] data-[highlighted]:text-[var(--foreground)]"
+
+    const nodes: React.ReactNode[] = []
+
+    if (item.hasSeparatorBefore) {
+      nodes.push(<DropdownMenuSeparator key={`sep-${item.id}`} className="my-1.5 mx-1" />)
+    }
+
+    if (item.children && item.children.length > 0) {
+      const isCurrentSubOpen = globalMenu.activeMenuPath.includes(item.id)
+
+      const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect()
+        setCoords({
+          top: rect.top - 6,
+          left: rect.right + 2 
+        })
+        globalMenu.pushToPath(item.id, level)
+      }
+
+      nodes.push(
+        <div 
+          key={item.id} 
+          className="w-full"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={() => globalMenu.scheduleCloseSubMenu(300)} 
+        >
+          <DropdownMenuItem className={cn(itemStyles, "flex justify-between items-center pr-2.5")}>
+            <div className="flex items-center gap-2">
+              {IconComponent && <IconComponent className="h-4 w-4 text-current shrink-0" />}
+              {item.text}
+            </div>
+            <LucideIcons.ChevronRight className="h-3.5 w-3.5 opacity-60 shrink-0" />
+          </DropdownMenuItem>
+
+          {isCurrentSubOpen && typeof window !== "undefined" && createPortal(
+            <div 
+              className="fixed min-w-52 rounded-xl p-1.5 select-none bg-[var(--popover)] border border-[var(--border)] text-[var(--ide-text-inactive)] shadow-xl z-50 flex flex-col gap-0.5"
+              style={{
+                top: `${coords.top}px`,
+                left: `${coords.left}px`,
+                '--tw-shadow-color': 'var(--ide-tooltip-shadow)'
+              } as React.CSSProperties}
+              onMouseEnter={globalMenu.cancelCloseSubMenu}
+              onMouseLeave={() => globalMenu.scheduleCloseSubMenu(300)}
+            >
+              <div className="flex flex-col gap-0.5" onClick={(e) => e.stopPropagation()}>
+                <IdeMenuItem items={item.children} level={level + 1} />
+              </div>
+            </div>,
+            document.body
+          )}
+        </div>
+      )
+    } else {
+      const actionKey = item.actionName as keyof typeof storeActions;
+      const targetAction = actionKey ? storeActions[actionKey] as () => void : undefined
+
+      nodes.push(
+        <DropdownMenuItem key={item.id} onClick={targetAction} className={itemStyles}>
+          {IconComponent && <IconComponent className="h-4 w-4 text-current shrink-0" />}
+          <span className="flex-1 tracking-wide">{item.text}</span>
+        </DropdownMenuItem>
+      )
+    }
+
+    return nodes
+  }
+
+  if (menuButton) {
+    const isGrouped = config.length > 0 && config[0] !== undefined && "groupId" in config[0]
+
+    return (
+      /* ⚡ CONNECTED: Uses resolved isolated state bounds to keep individual menus autonomous */
+      <DropdownMenu open={isCurrentlyOpen} onOpenChange={handleOpenToggle}>
+        <DropdownMenuTrigger render={menuButton} />
+        <DropdownMenuContent 
+          side="right" 
+          align="start" 
+          sideOffset={12}
+          className="min-w-52 rounded-xl p-1.5 select-none bg-[var(--popover)] border border-[var(--border)] text-[var(--ide-text-inactive)] shadow-xl"
+          style={{ '--tw-shadow-color': 'var(--ide-tooltip-shadow)' } as React.CSSProperties}
+        >
+          {isGrouped ? (
+            (config as MenuGroupData[]).map((group) => (
+              <React.Fragment key={group.groupId}>
+                {group.hasSeparatorBefore && (
+                  <DropdownMenuSeparator className="my-1.5 mx-1" />
+                )}
+                <DropdownMenuGroup className="flex flex-col gap-0.5">
+                  {group.items.map((item) => renderMenuNode(item))}
+                </DropdownMenuGroup>
+              </React.Fragment>
+            ))
+          ) : (
+            <DropdownMenuGroup className="flex flex-col gap-0.5">
+              {(config as MenuItemData[]).map((item) => renderMenuNode(item))}
+            </DropdownMenuGroup>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
+
+  const recursiveItems = items || []
+  return <>{recursiveItems.map((item) => renderMenuNode(item))}</>
+}
+
+export default IdeMenuItem;

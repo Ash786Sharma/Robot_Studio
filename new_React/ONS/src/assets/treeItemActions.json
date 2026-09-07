@@ -1,0 +1,52 @@
+[
+  {
+    "groupId": "Workspace Engine",
+    "items": [
+      { "id": "close-project", "text": "Close Project/Workspace", "iconName": "FolderMinus", "showOn": ["Project workspace"] },
+      { "id": "delete-project", "text": "Delete Project/Workspace", "iconName": "Trash2", "variant": "danger", "showOn": ["Project workspace"] }
+    ]
+  },
+  {
+    "groupId": "Network Nodes",
+    "items": [
+      { "id": "add-device", "text": "Add Device", "iconName": "Plus", "showOn": ["device folder"] },
+      { "id": "add-config", "text": "Add Configuration", "iconName": "Settings", "showOn": ["robot folder", "plc folder", "hmi folder"] },
+      { "id": "rename-device", "text": "Rename Device", "iconName": "Edit2", "showOn": ["robot folder", "plc folder", "hmi folder"] },
+      { "id": "remove-device", "text": "Remove Device", "iconName": "X", "variant": "danger", "showOn": ["robot folder", "plc folder", "hmi folder"] }
+    ]
+  },
+  {
+    "groupId": "System Setup",
+    "items": [
+      { "id": "delete-config", "text": "Delete Configuration", "iconName": "Trash2", "variant": "danger", "showOn": ["hardware config", "software config"] }
+    ]
+  },
+  {
+    "groupId": "Standard Logic Operations",
+    "items": [
+      { "id": "new-rprg", "text": "New .rprg File", "iconName": "FileCode", "showOn": ["program folder"] },
+      { "id": "new-rgprg", "text": "New .rgprg File", "iconName": "FileCode", "showOn": ["program folder"] }
+    ]
+  },
+  {
+    "groupId": "Safety Engineering Operations",
+    "items": [
+      { "id": "new-rsprg", "text": "New .rsprg File", "iconName": "Shield", "showOn": ["safety program folder"] },
+      { "id": "new-rsgprg", "text": "New .rsgprg File", "iconName": "Shield", "showOn": ["safety program folder"] }
+    ]
+  },
+  {
+    "groupId": "HMI Visualization Operations",
+    "items": [
+      { "id": "add-screen", "text": "Add Screen", "iconName": "Monitor", "showOn": ["Screen folder"] }
+    ]
+  },
+  {
+    "groupId": "File System Operations",
+    "items": [
+      { "id": "new-folder", "text": "New Folder", "iconName": "FolderPlus", "showOn": ["program folder", "safety program folder", "Screen folder"] },
+      { "id": "rename-item", "text": "Rename", "iconName": "Edit2", "showOn": ["program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] },
+      { "id": "delete-item", "text": "Delete", "iconName": "Trash2", "variant": "danger", "showOn": ["program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] }
+    ]
+  }
+]

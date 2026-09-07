@@ -1,0 +1,101 @@
+[
+  {
+    "id": "project-root",
+    "name": "Project Workspace",
+    "type": "Project workspace",
+    "icon": "FolderGit",
+    "children": [
+      {
+        "id": "devices-root",
+        "name": "Connected Devices",
+        "type": "device folder",
+        "icon": "Cpu",
+        "children": [
+          {
+            "id": "device-robot",
+            "name": "UR5 Robot Arm",
+            "type": "robot folder",
+            "icon": "Bot",
+            "children": [
+              {
+                "id": "robot-hw",
+                "name": "Hardware Config",
+                "type": "hardware config",
+                "icon": "Sliders"
+              },
+              {
+                "id": "robot-sw",
+                "name": "Software Config",
+                "type": "software config",
+                "icon": "Terminal"
+              },
+              {
+                "id": "robot-safety-prog",
+                "name": "Safety Programs",
+                "type": "program folder",
+                "icon": "Code2",
+                "children": [
+                  { "id": "rb-safety-main", "name": "main_safety.rsprg", "type": "robot Safety program file", "icon": "Binary" },
+                  { "id": "rb-safety-routine1", "name": "safety_limits.rsgprg", "type": "robot Safety program file", "icon": "ShieldAlert" }
+                ]
+              },
+              {
+                "id": "robot-prog",
+                "name": "Programs",
+                "type": "program folder",
+                "icon": "Code2",
+                "children": [
+                  { "id": "rb-main", "name": "main.rprg", "type": "robot program file", "icon": "Binary" },
+                  { "id": "rb-routine1", "name": "gripper.rgprg", "type": "robot program file", "icon": "ShieldAlert" }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "device-plc",
+            "name": "Siemens S7-1500 PLC",
+            "type": "plc folder",
+            "icon": "CircuitBoard",
+            "children": [
+              { "id": "plc-hw", "name": "Hardware Config", "type": "hardware config", "icon": "Sliders" },
+              { "id": "plc-sw", "name": "Software Config", "type": "software config", "icon": "Terminal" },
+              {
+                "id": "plc-Safety-prog",
+                "name": "Safety Program Blocks",
+                "type": "program folder",
+                "icon": "Cpu",
+                "children": [
+                  { "id": "plc-safety-main", "name": "ob1_main", "type": "ld", "block type": "ob", "icon": "Binary" },
+                  { "id": "plc-safety-routine1", "name": "routine1", "type": "graph", "block type": "fc", "icon": "Binary" },
+                   { "id": "plc-safety-routine2", "name": "routine2", "type": "scl", "block type": "fb", "icon": "Binary" },
+                   { "id": "plc-safety-db", "name": "db2", "type": "db", "block type": "db", "icon": "Binary" }]
+              },
+              {
+                "id": "plc-prog",
+                "name": "Program Blocks",
+                "type": "program folder",
+                "icon": "Cpu",
+                "children": [
+                  { "id": "plc-main", "name": "ob1_main", "type": "ld", "block type": "ob", "icon": "Binary" },
+                  { "id": "plc-routine1", "name": "routine1", "type": "graph", "block type": "fc", "icon": "Binary" },
+                   { "id": "plc-routine2", "name": "routine2", "type": "scl", "block type": "fb", "icon": "Binary" },
+                   { "id": "plc-db", "name": "db3", "type": "db", "block type": "db", "icon": "Binary" }]
+              }
+            ]
+          },
+          {
+            "id": "device-hmi",
+            "name": "ComfortPanel HMI",
+            "type": "hmi folder",
+            "icon": "Monitor",
+            "children": [
+              { "id": "hmi-hw", "name": "Hardware Config", "type": "hardware config", "icon": "Sliders" },
+              { "id": "hmi-sw", "name": "Software Config", "type": "software config", "icon": "Terminal" },
+              { "id": "hmi-screens", "name": "UI Screens", "type": "Screen folder", "icon": "Layout", "children":[ { "id": "hmi-main", "name": "main", "type": "hmi ui", "icon": "Monitor"}]}
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

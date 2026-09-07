@@ -1,43 +1,110 @@
 [
   {
-    "groupId": "project-actions",
+    "groupId": "workspace-management",
     "items": [
       {
         "id": "new-project",
-        "type": "action",
-        "text": "Create New Project",
+        "text": "New Project...",
         "iconName": "Plus",
         "actionName": "createNewProject"
       },
       {
-        "id": "open-project",
-        "type": "action",
-        "text": "Open Existing Project",
+        "id": "open-workspace",
+        "text": "Open Workspace",
         "iconName": "FolderOpen",
         "actionName": "openExistingProject"
+      },
+      {
+        "id": "recent-files",
+        "text": "Open Recent",
+        "iconName": "History",
+        "children": [
+          {
+            "id": "recent-project-1",
+            "text": "robotics-control-ui",
+            "iconName": "FileCode"
+          },
+          {
+            "id": "recent-project-2",
+            "text": "industrial-simulation-mesh",
+            "iconName": "Move3D"
+          },
+          {
+            "id": "clear-history",
+            "text": "Clear Recent Project Logs",
+            "iconName": "Trash2",
+            "variant": "danger",
+            "hasSeparatorBefore": true
+          }
+        ]
       }
     ]
   },
   {
-    "groupId": "appearance",
+    "groupId": "advanced-ide-toolkit",
     "hasSeparatorBefore": true,
     "items": [
       {
-        "id": "theme-switcher",
-        "type": "theme-selector",
-        "text": "Select Theme",
-        "iconName": "Palette"
+        "id": "version-control",
+        "text": "Git Version Control",
+        "iconName": "GitBranch",
+        "children": [
+          {
+            "id": "git-commit",
+            "text": "Commit Staged Changes",
+            "iconName": "Check"
+          },
+          {
+            "id": "git-remotes-root",
+            "text": "Manage Remotes",
+            "iconName": "CloudLightning",
+            "children": [
+              {
+                "id": "git-fetch-origin",
+                "text": "Fetch from origin",
+                "iconName": "Download"
+              },
+              {
+                "id": "git-push-upstream",
+                "text": "Push to upstream",
+                "iconName": "Upload"
+              },
+              {
+                "id": "git-advanced-sync-branch",
+                "text": "Advanced Synchronization Operations",
+                "iconName": "ShieldAlert",
+                "children": [
+                  {
+                    "id": "git-hard-reset",
+                    "text": "Hard Reset to HEAD",
+                    "iconName": "XCircle",
+                    "variant": "danger"
+                  },
+                  {
+                    "id": "git-prune",
+                    "text": "Prune Remote Tracking References",
+                    "iconName": "Flame"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "diagnostics-panel",
+        "text": "Diagnostics & Problems",
+        "iconName": "ShieldAlert"
       }
     ]
   },
   {
-    "groupId": "danger-zone",
+    "groupId": "destructive-actions-canvas",
     "hasSeparatorBefore": true,
     "items": [
       {
         "id": "close-project",
-        "type": "action",
-        "text": "Close Project",
+        "text": "Close Active Project",
         "iconName": "XCircle",
         "actionName": "closeProject",
         "variant": "danger"

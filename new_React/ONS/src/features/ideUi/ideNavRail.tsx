@@ -2,6 +2,8 @@ import React from "react";
 import * as LucideIcons from "lucide-react";
 import { IdeBarItem } from "@/features/ideUi/ideBarItem";
 import { IdeMenuItem } from "./ideMenuItem";
+// Import different layout specs
+import primaryMenuData from "@/assets/menuConfig.json"
 
 // Import your navigation configuration data
 import navConfig from "@/assets/navConfig.json"; 
@@ -36,7 +38,7 @@ export const IdeNavRail = () => {
 
     // Conditionally wrap inside IdeMenuItem if it's the Toggle Menu button
     if (item.isMenuButton) {
-      return <IdeMenuItem key={item.id} menuButton={barItemElement} />;
+      return <IdeMenuItem key={item.id} config={primaryMenuData} menuButton={barItemElement} />;
     }
 
     return <React.Fragment key={item.id}>{barItemElement}</React.Fragment>;
