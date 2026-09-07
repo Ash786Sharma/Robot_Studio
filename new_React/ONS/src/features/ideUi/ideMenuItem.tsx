@@ -75,19 +75,13 @@ export const IdeMenuItem = ({ menuButton }: IdeMenuItemProps) => {
                 if (item.type === "theme-selector") {
                   return (
                     <DropdownMenuSub key={item.id}>
-                      <DropdownMenuSubTrigger className={itemStyles}>
+                      <DropdownMenuSubTrigger
+                       className={itemStyles}>
                         {IconComponent && <IconComponent className="h-4 w-4 text-current shrink-0" />}
                         <span className="flex-1 tracking-wide">{item.text}</span>
                       </DropdownMenuSubTrigger>
-                      
-                      {/* 
-                        ⚡ THE EXACT FIX:
-                        Your DropdownMenuSubContent relies on an internal positioner from Base UI. 
-                        By wrapping it in DropdownMenuPortal without external alignment props, 
-                        Base UI can compute the hover protection triangle safely.
-                      */}
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent 
+                        <DropdownMenuSubContent
+                        sideOffset={4} 
                           className="bg-ide-panel border border-border text-foreground p-1 rounded-md min-w-48 shadow-ide focus:outline-none z-50"
                         >
                           {AVAILABLE_THEMES.map((theme) => {
@@ -111,7 +105,6 @@ export const IdeMenuItem = ({ menuButton }: IdeMenuItemProps) => {
                             );
                           })}
                         </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
                     </DropdownMenuSub>
                   )
                 }
