@@ -1,0 +1,19 @@
+[
+  {
+    "groupId": "editor-options",
+    "items": [
+      {
+        "id": "close-saved",
+        "text": "Close Saved",
+        "iconName": "XCircle",
+        "actionName": "close saved",
+        "variant": "danger"
+      },
+      {
+        "id": "close-all",
+        "text": "Close All",
+        "iconName": "SaveCheck",
+        "actionName": "close all"
+      }]
+  }
+]

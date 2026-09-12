@@ -10,12 +10,15 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 
-import Editor from "@monaco-editor/react"
+import Editor, { DiffEditor, useMonaco, loader } from '@monaco-editor/react';
 import { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState } from "@xyflow/react"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Grid, Stage } from "@react-three/drei"
 
 import "@xyflow/react/dist/style.css" 
+import { IdeBarItem } from "./ideBarItem";
+import { IdeMenuItem } from "./ideMenuItem";
+import editorOptions from "@/assets/editorOptionConfig.json"
 
 // 1. FLUSH MONACO EDITOR CONTAINER
 const MonacoEditorPlaceholder = () => {
@@ -40,7 +43,7 @@ function runRobotCycle() {
         value={initialCode}
         options={{
           fontSize: 12,
-          minimap: { enabled: false },
+          minimap: { enabled: true },
           automaticLayout: true,
           fontFamily: "var(--font-mono), monospace",
         }}
@@ -197,13 +200,19 @@ export const WorkspaceCanvas = () => {
             <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-[var(--ide-item-hover)] text-zinc-400 border border-[var(--border)]">
               {contextBadge}
             </span>
-            <button
-              onClick={() => setIsSplitView(!isSplitView)}
-              title={isSplitView ? "Collapse split-screen layout" : "Split editor workspace canvas view"}
-              className="p-1 rounded transition-colors duration-150 hover:bg-[var(--ide-item-hover)] hover:text-[var(--foreground)] outline-none"
-            >
-              {isSplitView ? <LucideIcons.Columns className="h-3.5 w-3.5" /> : <LucideIcons.Columns2 className="h-3.5 w-3.5" />}
-            </button>
+            <IdeBarItem
+          tooltip={isSplitView ? "Collapse split-screen layout" : "Split editor workspace canvas view"}
+          icon={<LucideIcons.Columns2 className="h-4 w-4 text-ide-inactive transition-colors group-hover:text-foreground" />}
+          side="bottom"
+          onClick={() => setIsSplitView(!isSplitView)}
+          className="px-1"
+        />
+        <IdeMenuItem config={editorOptions} menuButton={<IdeBarItem
+          tooltip={isSplitView ? "Collapse split-screen layout" : "Split editor workspace canvas view"}
+          icon={<LucideIcons.Ellipsis className="h-4 w-4 text-ide-inactive transition-colors group-hover:text-foreground" />}
+          side="bottom"
+          className="px-1"
+        />} />
           </div>
         </div>
 
