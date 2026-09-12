@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState } from "react"
 import { createPortal } from "react-dom"
 import * as LucideIcons from "lucide-react"
@@ -37,7 +35,6 @@ interface IdeMenuItemProps {
   config?: MenuGroupData[] | MenuItemData[] 
   items?: MenuItemData[]           
   level?: number 
-  // ⚡ FIXED: Added explicit props to allow standalone localized open state handling
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
@@ -47,24 +44,37 @@ export const IdeMenuItem = ({
   config = [], 
   items, 
   level = 0,
-  open,             // ⚡ Extract local open control
-  onOpenChange      // ⚡ Extract local state mutator
+  open,             
+  onOpenChange      
 }: IdeMenuItemProps) => {
-  const storeActions = useIdeStore()
+  const storeActions = useIdeStore() as Record<string, any>;
+  const globalMenu = useMenuStore();
   
-  // Extract global navigation rail Zustand state handlers
-  const globalMenu = useMenuStore()
+  // 1. Create a local backup state for context-isolated rendering (like tabs/canvas)
+  const [localOpen, setLocalOpen] = useState(false);
+
+  // 2. ⚡ THE ISOLATION LAYER: If it's a sub-menu or an explicit prop exists, follow it.
+  // Otherwise, check if this instance is running as a main menu button. 
+  // If it's used inside the Canvas without props, use local state so it doesn't corrupt globalMenu!
+  const isMainMenuButton = menuButton && level === 0 && config.length > 0;
+  const isUsedInCanvas = !isMainMenuButton && level === 0;
+
+  const isCurrentlyOpen = open !== undefined 
+    ? open 
+    : (isUsedInCanvas ? localOpen : globalMenu.isMenuOpen);
+
+  const handleOpenToggle = onOpenChange !== undefined 
+    ? onOpenChange 
+    : (nextOpen: boolean) => {
+        if (isUsedInCanvas) {
+          setLocalOpen(nextOpen);
+        } else {
+          nextOpen ? globalMenu.openMenu() : globalMenu.closeMenu();
+        }
+      };
+
+  const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   
-  // ⚡ INTENT DECOUPLING CALCULATOR: 
-  // If parent passes down a manual open prop (like the file tree rows), use it.
-  // Otherwise, safely fall back onto the global navigation bar Zustand store.
-  const isCurrentlyOpen = open !== undefined ? open : globalMenu.isMenuOpen
-  const handleOpenToggle = onOpenChange !== undefined ? onOpenChange : (nextOpen: boolean) => {
-    nextOpen ? globalMenu.openMenu() : globalMenu.closeMenu()
-  }
-
-  const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
-
   const renderMenuNode = (item: MenuItemData) => {
     const iconKey = item.iconName as keyof typeof LucideIcons;
     const IconComponent = LucideIcons[iconKey] as React.ComponentType<{ className?: string }>
@@ -146,7 +156,6 @@ export const IdeMenuItem = ({
     const isGrouped = config.length > 0 && config[0] !== undefined && "groupId" in config[0]
 
     return (
-      /* ⚡ CONNECTED: Uses resolved isolated state bounds to keep individual menus autonomous */
       <DropdownMenu open={isCurrentlyOpen} onOpenChange={handleOpenToggle}>
         <DropdownMenuTrigger render={menuButton} />
         <DropdownMenuContent 

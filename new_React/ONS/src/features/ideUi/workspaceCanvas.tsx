@@ -220,26 +220,12 @@ export const WorkspaceCanvas = () => {
           </TabsList>
 
           <div className="flex items-center gap-1.5 text-[var(--ide-text-inactive)]">
-            <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-[var(--ide-item-hover)] text-zinc-400 border border-[var(--border)]">
-              {contextBadge}
-            </span>
             <IdeBarItem
               tooltip={isSplitView ? "Collapse split-screen layout" : "Split editor workspace canvas view"}
               icon={<LucideIcons.Columns2 className="h-4 w-4 text-ide-inactive transition-colors group-hover:text-foreground" />}
               side="bottom"
               onClick={() => setIsSplitView(!isSplitView)}
               className="px-1"
-            />
-            <IdeMenuItem 
-              config={editorOptions} 
-              menuButton={
-                <IdeBarItem
-                  tooltip={isSplitView ? "Collapse split-screen layout" : "Split editor workspace canvas view"}
-                  icon={<LucideIcons.Ellipsis className="h-4 w-4 text-ide-inactive transition-colors group-hover:text-foreground" />}
-                  side="bottom"
-                  className="px-1"
-                />
-              } 
             />
           </div>
         </div>

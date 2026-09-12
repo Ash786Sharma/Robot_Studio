@@ -9,10 +9,16 @@ import { FileTreeItem, type TreeNode } from "@/features/ideUi/fileTreeItem"
 import mockTreeData from "@/assets/mockTreeData.json"
 import { cn } from "@/lib/utils"
 import { WorkspaceCanvas } from "./workspaceCanvas";
+import { useLayoutStore } from "@/core/store/layoutStore";
 
 export const IdeWorkspace = () => {
   // Shared state controller to handle active selections across your IDE workbench canvas
   const [activeNodeId, setActiveNodeId] = useState<string | undefined>(undefined)
+  const activeView = useLayoutStore((state) => state.activeView);
+  const isExplorerOpen = useLayoutStore((state) => state.isExplorerOpen);
+  const isTerminalOpen = useLayoutStore((state) => state.isTerminalOpen);
+
+  const isBottomPanelOpen = isTerminalOpen || activeView === "Problems";
 
   return (
     <main className="flex-1 h-full min-w-0 bg-[var(--background)] text-[var(--foreground)] select-none">
@@ -22,14 +28,14 @@ export const IdeWorkspace = () => {
           className="h-full w-full border-none"
         >
           {/* Panel One: Sidebar File Explorer Workspace */}
+          {isExplorerOpen && <>
           <ResizablePanel 
-            defaultSize={20} 
+            defaultSize={15} 
             className="rounded-sm border border-[var(--border)] bg-[var(--ide-panel-bg)] transition-colors duration-150 flex flex-col"
           >
             <div className="px-3 py-3 text-[10px] font-bold tracking-widest text-[var(--ide-text-inactive)] uppercase select-none shrink-0">
               Workspace Explorer
             </div>
-
             {/* ⚡ THE SINGLE HIGH-FIDELITY SCROLL ENGINE */}
             <ScrollArea 
               className={cn(
@@ -61,7 +67,7 @@ export const IdeWorkspace = () => {
             className="bg-transparent border-none w-1.5"
             dotsClassName="bg-[var(--ide-text-inactive)]/40 group-hover:bg-[var(--primary)]"
           />
-
+          </>}
           {/* Core Code Split Stack Workspace */}
           <ResizablePanel defaultSize={80}>
             <ResizablePanelGroup orientation="vertical" className="border-none">
@@ -73,7 +79,7 @@ export const IdeWorkspace = () => {
               >
                 <WorkspaceCanvas/>
               </ResizablePanel>
-
+              {isBottomPanelOpen && <>
               <ResizableHandle 
                 withHandle 
                 className="bg-transparent border-none h-1.5"
@@ -86,10 +92,19 @@ export const IdeWorkspace = () => {
                 className="rounded-sm border border-[var(--border)] bg-[var(--ide-panel-bg)] transition-colors duration-150"
               >
                 <div className="flex h-full items-center justify-center p-6 text-[var(--ide-text-inactive)]">
-                  <span className="font-semibold text-xs tracking-wide">TERMINAL / CONSOLE</span>
+                  {activeView === "Problems" ? (
+                    /* Render Problems view if Nav items activated it */
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="font-semibold text-xs tracking-wide uppercase">Problems / Errors</span>
+                      <span className="text-[11px] text-[var(--ide-text-inactive)]/70">No problems have been detected in the workspace.</span>
+                    </div>
+                  ) : (
+                    /* Default Fallback: Standard Terminal Panel */
+                    <span className="font-semibold text-xs tracking-wide">TERMINAL / CONSOLE</span>
+                  )}
                 </div>
               </ResizablePanel>
-
+              </>}
             </ResizablePanelGroup>
           </ResizablePanel>
         </ResizablePanelGroup>
