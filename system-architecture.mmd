@@ -1,0 +1,38 @@
+flowchart LR
+    subgraph Research["Development and test: Python"]
+        NB["UR5 notebooks\nDQ FK/IK, Jacobian, ScLERP\ntrajectory planning, NN training"]
+        FIXTURES["Golden fixtures\npose, Jacobian, IK tolerances"]
+        WEIGHTS["Trained model weights\nexported and quantized"]
+    end
+
+    subgraph App["ONS application: React + Node.js"]
+        FE["ONS frontend\nIDE, editors, 3D preview\nnon-authoritative simulation"]
+        BE["ONSBackend\nauth, projects, files, storage"]
+        BUILD["Build/compiler service\nIR, validation, codegen"]
+        DB["PostgreSQL + local storage"]
+    end
+
+    subgraph Controller["Production: Linux + FPGA controller"]
+        GATEWAY["Controller gateway\nversioned supervisory protocol"]
+        KIN["C/C++ kinematics\nFK / IK / Jacobian / trajectory"]
+        NN["Deterministic NN inference\nCPU or FPGA/HLS"]
+        RT["Real-time control loop"]
+        FPGA["FPGA motion/control\nI/O acceleration"]
+    end
+
+    NB --> FIXTURES
+    NB --> WEIGHTS
+    FIXTURES --> KIN
+    WEIGHTS --> NN
+
+    FE <--> BE
+    BE <--> DB
+    BE <--> BUILD
+    BUILD -->|generated artifact| GATEWAY
+    BE <--> |commands, deployment, telemetry| GATEWAY
+
+    GATEWAY --> RT
+    KIN --> RT
+    NN --> RT
+    RT --> FPGA
+    RT -->|telemetry and faults| GATEWAY

@@ -32,8 +32,8 @@ interface SourceControlState {
 }
 
 const initialChanges: SourceChange[] = [
-  { id: "workspace-canvas", path: "src/features/ideUi/workspaceCanvas.tsx", fileName: "workspaceCanvas.tsx", status: "M", staged: false, additions: 18, deletions: 4 },
-  { id: "source-control", path: "src/features/ideUi/sourceControlPanel.tsx", fileName: "sourceControlPanel.tsx", status: "A", staged: false, additions: 126, deletions: 0 },
+  { id: "workspace-canvas", path: "src/features/ide-shell/components/WorkspaceCanvas.tsx", fileName: "WorkspaceCanvas.tsx", status: "M", staged: false, additions: 18, deletions: 4 },
+  { id: "source-control", path: "src/features/ide-shell/components/SourceControlPanel.tsx", fileName: "SourceControlPanel.tsx", status: "A", staged: false, additions: 126, deletions: 0 },
   { id: "robot-model", path: "models/ur5/ur5.urdf", fileName: "ur5.urdf", status: "U", staged: false, additions: 6, deletions: 2 },
 ]
 
