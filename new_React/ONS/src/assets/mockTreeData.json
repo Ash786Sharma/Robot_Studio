@@ -18,6 +18,58 @@
             "icon": "Bot",
             "children": [
               {
+                "id": "robot-kinematic-chain",
+                "name": "Kinematic Chain",
+                "type": "robot layer folder",
+                "icon": "GitBranch",
+                "children": [
+                  { "id": "ur5-base-link", "name": "base_link", "type": "kinematic link", "icon": "CircleDot" },
+                  { "id": "ur5-shoulder-pan", "name": "shoulder_pan_joint", "type": "kinematic joint", "icon": "Rotate3D" },
+                  { "id": "ur5-shoulder-link", "name": "shoulder_link", "type": "kinematic link", "icon": "Box" },
+                  { "id": "ur5-shoulder-lift", "name": "shoulder_lift_joint", "type": "kinematic joint", "icon": "Rotate3D" },
+                  { "id": "ur5-upper-arm", "name": "upper_arm_link", "type": "kinematic link", "icon": "Box" },
+                  { "id": "ur5-elbow", "name": "elbow_joint", "type": "kinematic joint", "icon": "Rotate3D" },
+                  { "id": "ur5-forearm", "name": "forearm_link", "type": "kinematic link", "icon": "Box" },
+                  { "id": "ur5-wrist-1", "name": "wrist_1_joint", "type": "kinematic joint", "icon": "Rotate3D" },
+                  { "id": "ur5-wrist-1-link", "name": "wrist_1_link", "type": "kinematic link", "icon": "Box" },
+                  { "id": "ur5-wrist-2", "name": "wrist_2_joint", "type": "kinematic joint", "icon": "Rotate3D" },
+                  { "id": "ur5-wrist-2-link", "name": "wrist_2_link", "type": "kinematic link", "icon": "Box" },
+                  { "id": "ur5-wrist-3", "name": "wrist_3_joint", "type": "kinematic joint", "icon": "Rotate3D" },
+                  { "id": "ur5-wrist-3-link", "name": "wrist_3_link / TCP", "type": "kinematic link", "icon": "Crosshair" }
+                ]
+              },
+              {
+                "id": "robot-visual-model",
+                "name": "Visual Model (DAE)",
+                "type": "visual model folder",
+                "icon": "Eye",
+                "children": [
+                  { "id": "ur5-visual-urdf", "name": "ur5.urdf", "type": "visual model folder", "icon": "FileCode" },
+                  { "id": "ur5-visual-meshes", "name": "7 link meshes", "type": "visual model folder", "icon": "Boxes" }
+                ]
+              },
+              {
+                "id": "robot-collision-model",
+                "name": "Collision Model (STL)",
+                "type": "collision model folder",
+                "icon": "ShieldCheck",
+                "children": [
+                  { "id": "ur5-collision-meshes", "name": "7 collision meshes", "type": "collision model folder", "icon": "Scan" },
+                  { "id": "ur5-collision-groups", "name": "Collision groups", "type": "collision model folder", "icon": "Layers" }
+                ]
+              },
+              {
+                "id": "robot-simulation",
+                "name": "Simulation",
+                "type": "simulation folder",
+                "icon": "PlayCircle",
+                "children": [
+                  { "id": "ur5-jog-controller", "name": "Jog Controller", "type": "simulation folder", "icon": "Move3D" },
+                  { "id": "ur5-tcp", "name": "TCP / Tool Center Point", "type": "simulation folder", "icon": "Crosshair" },
+                  { "id": "ur5-workspace", "name": "Workspace bounds", "type": "simulation folder", "icon": "ScanSearch" }
+                ]
+              },
+              {
                 "id": "robot-hw",
                 "name": "Hardware Config",
                 "type": "hardware config",

@@ -1,6 +1,6 @@
 import { create } from "zustand"
 
-export type ActiveView = "Explorer" | "3D Viewer" | "Terminal" | "Problems" | "Settings" | null
+export type ActiveView = "Explorer" | "Source Control" | "3D Viewer" | "Terminal" | "Problems" | "Settings" | null
 
 interface LayoutState {
   activeView: ActiveView
@@ -19,7 +19,7 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   
   setActiveView: (view) => set(() => {
     const nextState: Partial<LayoutState> = { activeView: view }
-    if (view === "Explorer") nextState.isExplorerOpen = true
+    if (view === "Explorer" || view === "Source Control") nextState.isExplorerOpen = true
     if (view === "Terminal") nextState.isTerminalOpen = true
     return nextState
   }),

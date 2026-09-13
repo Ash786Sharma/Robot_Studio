@@ -164,19 +164,11 @@ export const IdeMenuItem = ({
 
     return (
       <DropdownMenu open={isCurrentlyOpen} onOpenChange={handleOpenToggle} modal={false}>
-        <DropdownMenuTrigger asChild>
-          {menuButton}
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger render={menuButton} />
         <DropdownMenuContent 
           side="right" 
           align="start" 
           sideOffset={12}
-          // ⚡ CRITICAL FIX: Block focus conflicts from triggering rapid open/close cycles
-          onCloseAutoFocus={(e) => e.preventDefault()}
-          onInteractOutside={(e) => {
-            // Prevent close collisions if canvas elements are clicked while active
-            if (isMainMenuButton) e.preventDefault(); 
-          }}
           className="min-w-52 rounded-xl p-1.5 select-none bg-[var(--popover)] border border-[var(--border)] text-[var(--ide-text-inactive)] shadow-xl"
           style={{ '--tw-shadow-color': 'var(--ide-tooltip-shadow)' } as React.CSSProperties}
         >

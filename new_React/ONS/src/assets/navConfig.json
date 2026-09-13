@@ -15,6 +15,12 @@
       "isActive": true
     },
     {
+      "id": "source-control",
+      "tooltip": "Source Control",
+      "shortcutKeys": ["Ctrl", "Shift", "G"],
+      "iconName": "GitBranch"
+    },
+    {
       "id": "3d-viewer",
       "tooltip": "3D Viewer",
       "shortcutKeys": ["Ctrl", "Shift", "D"],

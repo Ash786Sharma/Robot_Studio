@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import * as LucideIcons from "lucide-react"
 import { cn } from "@/lib/utils"
 import { IdeMenuItem, type MenuGroupData } from "@/features/ideUi/ideMenuItem" 
+import type { WorkspaceFile } from "@/core/store/workSpaceStore"
 import treeActionsRaw from "@/assets/treeItemActions.json"
 
 export interface TreeNode {
@@ -11,6 +12,12 @@ export interface TreeNode {
     | "Project workspace"
     | "device folder"
     | "robot folder"
+    | "robot layer folder"
+    | "kinematic link"
+    | "kinematic joint"
+    | "visual model folder"
+    | "collision model folder"
+    | "simulation folder"
     | "plc folder"
     | "hmi folder"
     | "hardware config"
@@ -36,13 +43,34 @@ interface FileTreeItemProps {
   // ⚡ FIXED: Added explicit typings so your layout workspace compiles seamlessly
   activeNodeId?: string;
   onNodeSelect?: (node: TreeNode) => void;
+  onFileOpen?: (file: WorkspaceFile) => void;
+  path?: string[];
+}
+
+const toWorkspaceFile = (node: TreeNode, path: string[]): WorkspaceFile | null => {
+  const isFile = ["robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"].includes(node.type)
+  if (!isFile) return null
+
+  const isRobot = node.type.includes("robot")
+  return {
+    id: node.id,
+    name: node.name,
+    path: [...path, node.name],
+    icon: node.icon,
+    type: node.type,
+    blockType: node["block type"],
+    device: isRobot ? "robot" : node.type === "hmi ui" ? "hmi" : ["ld", "graph", "scl", "db"].includes(node.type) ? "plc" : "unknown",
+    safety: node.type.includes("Safety") || node.name.toLowerCase().includes("safety"),
+  }
 }
 
 export const FileTreeItem = ({ 
   node, 
   depth = 0, 
   activeNodeId, 
-  onNodeSelect 
+  onNodeSelect,
+  onFileOpen,
+  path = [],
 }: FileTreeItemProps) => {
   const [isOpen, setIsOpen] = useState(depth === 0)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -79,6 +107,10 @@ export const FileTreeItem = ({
     // Fire your selection update method up to your IdeWorkspace state loop
     if (onNodeSelect) {
       onNodeSelect(node)
+    }
+    const workspaceFile = toWorkspaceFile(node, path)
+    if (workspaceFile && onFileOpen) {
+      onFileOpen(workspaceFile)
     }
   }
 
@@ -142,6 +174,8 @@ export const FileTreeItem = ({
               // ⚡ PASSED DOWN: Continuously route properties down to deeper sub-nodes
               activeNodeId={activeNodeId}
               onNodeSelect={onNodeSelect}
+              onFileOpen={onFileOpen}
+              path={[...path, node.name]}
             />
           ))}
         </div>

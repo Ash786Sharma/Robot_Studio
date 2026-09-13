@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import {
   ResizableHandle,
   ResizablePanel,
@@ -9,7 +9,9 @@ import { FileTreeItem, type TreeNode } from "@/features/ideUi/fileTreeItem"
 import mockTreeData from "@/assets/mockTreeData.json"
 import { cn } from "@/lib/utils"
 import { WorkspaceCanvas } from "./workspaceCanvas";
+import { SourceControlPanel } from "./sourceControlPanel";
 import { useLayoutStore } from "@/core/store/layoutStore";
+import { useWorkspaceStore, type WorkspaceFile } from "@/core/store/workSpaceStore";
 
 export const IdeWorkspace = () => {
   // Shared state controller to handle active selections across your IDE workbench canvas
@@ -17,6 +19,7 @@ export const IdeWorkspace = () => {
   const activeView = useLayoutStore((state) => state.activeView);
   const isExplorerOpen = useLayoutStore((state) => state.isExplorerOpen);
   const isTerminalOpen = useLayoutStore((state) => state.isTerminalOpen);
+  const openFile = useWorkspaceStore((state) => state.openFile);
 
   const isBottomPanelOpen = isTerminalOpen || activeView === "Problems";
 
@@ -33,33 +36,32 @@ export const IdeWorkspace = () => {
             defaultSize={15} 
             className="rounded-sm border border-[var(--border)] bg-[var(--ide-panel-bg)] transition-colors duration-150 flex flex-col"
           >
-            <div className="px-3 py-3 text-[10px] font-bold tracking-widest text-[var(--ide-text-inactive)] uppercase select-none shrink-0">
-              Workspace Explorer
-            </div>
-            {/* ⚡ THE SINGLE HIGH-FIDELITY SCROLL ENGINE */}
-            <ScrollArea 
-              className={cn(
-                "w-full flex-1 min-h-0 transition-all duration-150",
-                // 🎬 VISIBILITY HOVER FILTER: Scroll track drops away fully until active mouse movement
-                "[&_[data-slot=scroll-area-scrollbar]]:opacity-0 hover:[&_[data-slot=scroll-area-scrollbar]]:opacity-100",
-                // 📏 COMPACT SIDEBAR SCROLL SIZE: Restricts vertical scroll tracks cleanly to a thin 4px width
-                "[&_[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:!w-3 p-0 ",
-                // 🎨 THEME SYNC LOOKUPS: Forces inner elements to follow .theme-vsc-dark design tokens
-                "[&_[data-slot=scroll-area-thumb]]:!bg-[var(--ide-item-hover)]",
-                "[&_[data-slot=scroll-area-thumb]]:opacity-60 hover:[&_[data-slot=scroll-area-thumb]]:opacity-100"
-              )}
-            >
-              <div className="pl-1.5 pr-3 pb-4 flex flex-col w-full gap-0.5">
-                {(mockTreeData as TreeNode[]).map((rootNode) => (
-                  <FileTreeItem 
-                    key={rootNode.id} 
-                    node={rootNode} 
-                    activeNodeId={activeNodeId}
-                    onNodeSelect={(node) => setActiveNodeId(node.id)}
-                  />
-                ))}
+            {activeView === "Source Control" ? <SourceControlPanel /> : <>
+              <div className="px-3 py-3 text-[10px] font-bold tracking-widest text-[var(--ide-text-inactive)] uppercase select-none shrink-0">
+                Workspace Explorer
               </div>
-            </ScrollArea>
+              <ScrollArea 
+                className={cn(
+                  "w-full flex-1 min-h-0 transition-all duration-150",
+                  "[&_[data-slot=scroll-area-scrollbar]]:opacity-0 hover:[&_[data-slot=scroll-area-scrollbar]]:opacity-100",
+                  "[&_[data-slot=scroll-area-scrollbar][data-orientation=vertical]]:!w-3 p-0 ",
+                  "[&_[data-slot=scroll-area-thumb]]:!bg-[var(--ide-item-hover)]",
+                  "[&_[data-slot=scroll-area-thumb]]:opacity-60 hover:[&_[data-slot=scroll-area-thumb]]:opacity-100"
+                )}
+              >
+                <div className="pl-1.5 pr-3 pb-4 flex flex-col w-full gap-0.5">
+                  {(mockTreeData as TreeNode[]).map((rootNode) => (
+                    <FileTreeItem 
+                      key={rootNode.id} 
+                      node={rootNode} 
+                      activeNodeId={activeNodeId}
+                      onNodeSelect={(node) => setActiveNodeId(node.id)}
+                      onFileOpen={(file: WorkspaceFile) => openFile(file)}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
+            </>}
           </ResizablePanel>
 
           <ResizableHandle 

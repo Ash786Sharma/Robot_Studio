@@ -34,6 +34,7 @@ interface IdeMenuItemProps {
   menuButton?: React.ReactElement 
   config?: MenuGroupData[] | MenuItemData[] 
   items?: MenuItemData[]           
+  onAction?: (item: MenuItemData) => void
   level?: number 
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -43,6 +44,7 @@ export const IdeMenuItem = ({
   menuButton, 
   config = [], 
   items, 
+  onAction,
   level = 0,
   open,             
   onOpenChange      
@@ -53,20 +55,17 @@ export const IdeMenuItem = ({
   // 1. Create a local backup state for context-isolated rendering (like tabs/canvas)
   const [localOpen, setLocalOpen] = useState(false);
 
-  // 2. ⚡ THE ISOLATION LAYER: If it's a sub-menu or an explicit prop exists, follow it.
-  // Otherwise, check if this instance is running as a main menu button. 
-  // If it's used inside the Canvas without props, use local state so it doesn't corrupt globalMenu!
-  const isMainMenuButton = menuButton && level === 0 && config.length > 0;
-  const isUsedInCanvas = !isMainMenuButton && level === 0;
+  // Root menus own their state unless a caller explicitly controls them.
+  const isRootMenu = level === 0;
 
   const isCurrentlyOpen = open !== undefined 
     ? open 
-    : (isUsedInCanvas ? localOpen : globalMenu.isMenuOpen);
+    : (isRootMenu ? localOpen : globalMenu.isMenuOpen);
 
   const handleOpenToggle = onOpenChange !== undefined 
     ? onOpenChange 
     : (nextOpen: boolean) => {
-        if (isUsedInCanvas) {
+        if (isRootMenu) {
           setLocalOpen(nextOpen);
         } else {
           nextOpen ? globalMenu.openMenu() : globalMenu.closeMenu();
@@ -130,7 +129,7 @@ export const IdeMenuItem = ({
               onMouseLeave={() => globalMenu.scheduleCloseSubMenu(300)}
             >
               <div className="flex flex-col gap-0.5" onClick={(e) => e.stopPropagation()}>
-                <IdeMenuItem items={item.children} level={level + 1} />
+                <IdeMenuItem items={item.children} onAction={onAction} level={level + 1} />
               </div>
             </div>,
             document.body
@@ -139,7 +138,11 @@ export const IdeMenuItem = ({
       )
     } else {
       const actionKey = item.actionName as keyof typeof storeActions;
-      const targetAction = actionKey ? storeActions[actionKey] as () => void : undefined
+      const targetAction = onAction
+        ? () => onAction(item)
+        : actionKey
+          ? storeActions[actionKey] as () => void
+          : undefined
 
       nodes.push(
         <DropdownMenuItem key={item.id} onClick={targetAction} className={itemStyles}>

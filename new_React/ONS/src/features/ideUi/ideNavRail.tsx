@@ -5,6 +5,7 @@ import { IdeMenuItem } from "./ideMenuItem";
 import primaryMenuData from "@/assets/menuConfig.json";
 import navConfig from "@/assets/navConfig.json"; 
 import { useLayoutStore } from "@/core/store/layoutStore";
+import { useWorkspaceStore } from "@/core/store/workSpaceStore";
 
 interface NavItemConfig {
   id: string;
@@ -23,6 +24,15 @@ export const IdeNavRail = () => {
   const setActiveView = useLayoutStore((state) => state.setActiveView);
   const toggleExplorer = useLayoutStore((state) => state.toggleExplorer);
   const toggleTerminal = useLayoutStore((state) => state.toggleTerminal);
+  const setLeftTab = useWorkspaceStore((state) => state.setLeftTab);
+  const setRightTab = useWorkspaceStore((state) => state.setRightTab);
+  const setIsSplitView = useWorkspaceStore((state) => state.setIsSplitView);
+  const openTab = useWorkspaceStore((state) => state.openTab);
+  const leftTab = useWorkspaceStore((state) => state.leftTab);
+  const rightTab = useWorkspaceStore((state) => state.rightTab);
+  const hiddenTabs = useWorkspaceStore((state) => state.hiddenTabs);
+  const closeTab = useWorkspaceStore((state) => state.closeTab);
+  const isViewerOpen = !hiddenTabs.includes("viewer") && (leftTab === "viewer" || rightTab === "viewer");
 
   const renderItem = (item: NavItemConfig) => {
     const IconComponent = LucideIcons[item.iconName] as React.ComponentType<{ className?: string }>;
@@ -31,9 +41,18 @@ export const IdeNavRail = () => {
     let onClickAction = () => {};
 
     // Inside your IdeNavRail component's renderItem function:
-if (item.id === "explorer") {
-      isItemActive = isExplorerOpen;
-      onClickAction = () => toggleExplorer();
+    if (item.id === "explorer") {
+      isItemActive = isExplorerOpen && activeView === "Explorer";
+      onClickAction = () => {
+        if (activeView === "Explorer") {
+          toggleExplorer();
+        } else {
+          setActiveView("Explorer");
+        }
+      };
+    } else if (item.id === "source-control") {
+      isItemActive = activeView === "Source Control";
+      onClickAction = () => setActiveView(activeView === "Source Control" ? "Explorer" : "Source Control");
     } else if (item.id === "terminal") {
       isItemActive = isTerminalOpen && activeView !== "Problems";
       onClickAction = () => {
@@ -55,15 +74,16 @@ if (item.id === "explorer") {
           if (!isTerminalOpen) toggleTerminal();
         }
       };
-    } else if (item.id === "viewer3d") {
-      // 🧊 Active when the central workspace surface is explicitly rendered as the 3D Viewer
-      isItemActive = activeView === "3D Viewer";
+    } else if (item.id === "3d-viewer") {
+      isItemActive = isViewerOpen;
       onClickAction = () => {
-        if (activeView === "3D Viewer") {
-          // Reverting it sets it back to null or your default code editor mode
-          setActiveView(null); 
+        if (isViewerOpen) {
+          closeTab("viewer", leftTab === "viewer" ? "left" : "right");
         } else {
-          setActiveView("3D Viewer");
+          openTab("viewer");
+          setLeftTab("viewer");
+          setRightTab("viewer");
+          setIsSplitView(false);
         }
       };
     }
@@ -81,7 +101,13 @@ if (item.id === "explorer") {
     );
 
     if (item.isMenuButton) {
-      return <IdeMenuItem key={item.id} config={primaryMenuData} menuButton={barItemElement} />;
+      return (
+        <IdeMenuItem
+          key={item.id}
+          config={primaryMenuData}
+          menuButton={barItemElement}
+        />
+      );
     }
 
     return <React.Fragment key={item.id}>{barItemElement}</React.Fragment>;

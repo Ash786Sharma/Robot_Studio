@@ -2,11 +2,9 @@ import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import { OrbitControls, Grid } from '@react-three/drei';
-import { useIDEStore } from '../../core/store/themeStore';
 
 const RoboticArmModel: React.FC = () => {
-  // Bind directly to structural transform vectors from the Zustand core
-  const position = useIDEStore((state) => state.robotTransform.position);
+  const position: [number, number, number] = [0, 1, 0];
   
   return (
     <RigidBody type="kinematicPosition">
@@ -21,7 +19,7 @@ const RoboticArmModel: React.FC = () => {
 export const ViewportView: React.FC = () => {
   return (
     <div className="w-full h-full bg-zinc-900 relative">
-      <Canvas camera={{ position:, fov: 50 }}>
+      <Canvas camera={{ position: [4, 3, 5], fov: 50 }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
         

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<robot name="ur5">
+  <material name="blue"><color rgba="0.08 0.42 0.78 1"/></material>
+  <material name="steel"><color rgba="0.72 0.75 0.78 1"/></material>
+  <link name="base_link"><visual><geometry><mesh filename="ur5/visual/base.dae"/></geometry><material name="steel"/></visual><collision><geometry><mesh filename="ur5/collision/base.stl"/></geometry></collision></link>
+  <link name="shoulder_link"><visual><geometry><mesh filename="ur5/visual/shoulder.dae"/></geometry><material name="blue"/></visual><collision><geometry><mesh filename="ur5/collision/shoulder.stl"/></geometry></collision></link>
+  <link name="upper_arm_link"><visual><geometry><mesh filename="ur5/visual/upperarm.dae"/></geometry><material name="steel"/></visual><collision><geometry><mesh filename="ur5/collision/upperarm.stl"/></geometry></collision></link>
+  <link name="forearm_link"><visual><geometry><mesh filename="ur5/visual/forearm.dae"/></geometry><material name="blue"/></visual><collision><geometry><mesh filename="ur5/collision/forearm.stl"/></geometry></collision></link>
+  <link name="wrist_1_link"><visual><geometry><mesh filename="ur5/visual/wrist1.dae"/></geometry><material name="steel"/></visual><collision><geometry><mesh filename="ur5/collision/wrist1.stl"/></geometry></collision></link>
+  <link name="wrist_2_link"><visual><geometry><mesh filename="ur5/visual/wrist2.dae"/></geometry><material name="blue"/></visual><collision><geometry><mesh filename="ur5/collision/wrist2.stl"/></geometry></collision></link>
+  <link name="wrist_3_link"><visual><geometry><mesh filename="ur5/visual/wrist3.dae"/></geometry><material name="steel"/></visual><collision><geometry><mesh filename="ur5/collision/wrist3.stl"/></geometry></collision></link>
+  <joint name="shoulder_pan_joint" type="revolute"><parent link="base_link"/><child link="shoulder_link"/><origin xyz="0 0 0.089159" rpy="0 0 0"/><axis xyz="0 0 1"/><limit lower="-6.283185" upper="6.283185" effort="150" velocity="3.14159"/></joint>
+  <joint name="shoulder_lift_joint" type="revolute"><parent link="shoulder_link"/><child link="upper_arm_link"/><origin xyz="0 0.13585 0" rpy="0 1.57079632679 0"/><axis xyz="0 1 0"/><limit lower="-6.283185" upper="6.283185" effort="150" velocity="3.14159"/></joint>
+  <joint name="elbow_joint" type="revolute"><parent link="upper_arm_link"/><child link="forearm_link"/><origin xyz="0 -0.1197 0.425" rpy="0 0 0"/><axis xyz="0 1 0"/><limit lower="-6.283185" upper="6.283185" effort="150" velocity="3.14159"/></joint>
+  <joint name="wrist_1_joint" type="revolute"><parent link="forearm_link"/><child link="wrist_1_link"/><origin xyz="0 0 0.39225" rpy="0 1.57079632679 0"/><axis xyz="0 1 0"/><limit lower="-6.283185" upper="6.283185" effort="28" velocity="3.14159"/></joint>
+  <joint name="wrist_2_joint" type="revolute"><parent link="wrist_1_link"/><child link="wrist_2_link"/><origin xyz="0 0.093 0" rpy="0 0 0"/><axis xyz="0 0 1"/><limit lower="-6.283185" upper="6.283185" effort="28" velocity="3.14159"/></joint>
+  <joint name="wrist_3_joint" type="revolute"><parent link="wrist_2_link"/><child link="wrist_3_link"/><origin xyz="0 0 0.09465" rpy="0 0 0"/><axis xyz="0 1 0"/><limit lower="-6.283185" upper="6.283185" effort="28" velocity="3.14159"/></joint>
+</robot>

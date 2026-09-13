@@ -3,6 +3,18 @@
     "groupId": "editor-options",
     "items": [
       {
+        "id": "show-changes",
+        "text": "Show Changes",
+        "iconName": "GitCompare",
+        "actionName": "show changes"
+      },
+      {
+        "id": "save-file",
+        "text": "Save File",
+        "iconName": "Save",
+        "actionName": "save file"
+      },
+      {
         "id": "close-saved",
         "text": "Close Saved",
         "iconName": "XCircle",

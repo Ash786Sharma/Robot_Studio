@@ -12,6 +12,7 @@ interface IdeBarItemProps {
   icon?: ReactNode;
   className?: string;
   onClick?: () => void;
+  disabled?: boolean;
   isActive?: boolean;
   side?: "top" | "right" | "bottom" | "left";
 }
@@ -24,6 +25,7 @@ export function IdeBarItem({
   icon,
   className,
   onClick,
+  disabled,
   children,
   isActive,
   side = "top"
@@ -34,6 +36,7 @@ export function IdeBarItem({
       variant="ghost"
       size="sm"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         "group cursor-pointer h-6.5 px-2 font-medium gap-1.5 rounded-md transition-all select-none duration-150 border",
         
