@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import * as LucideIcons from "lucide-react"
 import { cn } from "@/lib/utils"
-import { IdeMenuItem, type MenuGroupData } from "@/features/ide-shell/components/IdeMenuItem"
+import { IdeMenuItem, type MenuGroupData, type MenuItemData } from "@/features/ide-shell/components/IdeMenuItem"
 import type { WorkspaceFile } from "@/core/store/workspaceStore"
 import treeActionsRaw from "@/config/treeItemActions.json"
 import type { TreeNode } from "./fileTree.types"
@@ -15,6 +15,7 @@ interface FileTreeItemProps {
   activeNodeId?: string;
   onNodeSelect?: (node: TreeNode) => void;
   onFileOpen?: (file: WorkspaceFile) => void;
+  onAction?: (item: MenuItemData, node: TreeNode) => void | Promise<void>;
   path?: string[];
 }
 
@@ -41,6 +42,7 @@ export const FileTreeItem = ({
   activeNodeId, 
   onNodeSelect,
   onFileOpen,
+  onAction,
   path = [],
 }: FileTreeItemProps) => {
   const [isOpen, setIsOpen] = useState(depth === 0)
@@ -124,6 +126,7 @@ export const FileTreeItem = ({
         >
           <IdeMenuItem 
             config={filteredActions}
+            onAction={(item) => onAction?.(item, node)}
             open={isDropdownOpen}
             onOpenChange={setIsDropdownOpen}
             menuButton={
@@ -146,6 +149,7 @@ export const FileTreeItem = ({
               activeNodeId={activeNodeId}
               onNodeSelect={onNodeSelect}
               onFileOpen={onFileOpen}
+              onAction={onAction}
               path={[...path, node.name]}
             />
           ))}

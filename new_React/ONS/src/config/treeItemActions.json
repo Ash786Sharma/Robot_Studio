@@ -7,6 +7,15 @@
     ]
   },
   {
+    "groupId": "Backend File Operations",
+    "items": [
+      { "id": "new-folder", "text": "New Folder", "iconName": "FolderPlus", "showOn": ["Project workspace", "device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder"] },
+      { "id": "new-file", "text": "New File", "iconName": "FilePlus", "showOn": ["Project workspace", "device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder"] },
+      { "id": "rename-item", "text": "Rename", "iconName": "Edit2", "showOn": ["device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] },
+      { "id": "delete-item", "text": "Delete", "iconName": "Trash2", "variant": "danger", "showOn": ["device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] }
+    ]
+  },
+  {
     "groupId": "Network Nodes",
     "items": [
       { "id": "add-device", "text": "Add Device", "iconName": "Plus", "showOn": ["device folder"] },
@@ -39,14 +48,6 @@
     "groupId": "HMI Visualization Operations",
     "items": [
       { "id": "add-screen", "text": "Add Screen", "iconName": "Monitor", "showOn": ["Screen folder"] }
-    ]
-  },
-  {
-    "groupId": "File System Operations",
-    "items": [
-      { "id": "new-folder", "text": "New Folder", "iconName": "FolderPlus", "showOn": ["program folder", "safety program folder", "Screen folder"] },
-      { "id": "rename-item", "text": "Rename", "iconName": "Edit2", "showOn": ["program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] },
-      { "id": "delete-item", "text": "Delete", "iconName": "Trash2", "variant": "danger", "showOn": ["program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] }
     ]
   }
 ]

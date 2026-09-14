@@ -1,0 +1,12 @@
+{
+  "name": "robot-studio",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "db:generate": "npm --prefix new_React/ONSBackend run db:generate",
+    "db:migrate": "npm --prefix new_React/ONSBackend run db:migrate",
+    "db:studio": "npm --prefix new_React/ONSBackend run db:studio",
+    "build": "npm --prefix new_React/ONSBackend run build && npm --prefix new_React/ONS run build",
+    "test": "npm --prefix new_React/ONSBackend test"
+  }
+}

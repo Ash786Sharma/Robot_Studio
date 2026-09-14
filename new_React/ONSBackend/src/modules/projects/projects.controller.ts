@@ -16,3 +16,8 @@ export async function getProject(req: Request, res: Response) {
   const project = await projectsService.getById(param(req, "id"), req.user!.id);
   res.json(project);
 }
+
+export async function deleteProject(req: Request, res: Response) {
+  await projectsService.remove(param(req, "id"), req.user!.id);
+  res.status(204).send();
+}

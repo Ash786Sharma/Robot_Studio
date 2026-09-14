@@ -16,4 +16,8 @@ export const projectsRepository = {
     const rows = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
     return rows[0];
   },
+
+  async remove(id: string) {
+    await db.delete(projects).where(eq(projects.id, id));
+  },
 };

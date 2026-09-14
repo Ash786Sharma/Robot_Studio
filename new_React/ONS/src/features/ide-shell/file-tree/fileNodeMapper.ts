@@ -22,6 +22,8 @@ export function mapFileNodeToTreeNode(node: FileNodeDto): TreeNode {
     name: node.name,
     type: node.kind === "folder" ? "device folder" : (node.fileType ?? "robot program file"),
     icon: resolveIcon(node.kind, node.fileType),
+    kind: node.kind,
+    fileType: node.fileType,
     children: node.children?.map(mapFileNodeToTreeNode),
   }
 }

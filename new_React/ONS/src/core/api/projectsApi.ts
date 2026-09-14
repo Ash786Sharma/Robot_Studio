@@ -16,4 +16,7 @@ export const projectsApi = {
     apiRequest<ProjectSummary>("/api/projects", { method: "POST", body: input }),
 
   get: (id: string) => apiRequest<ProjectSummary>(`/api/projects/${id}`),
+
+  remove: (id: string) =>
+    apiRequest<void>(`/api/projects/${id}`, { method: "DELETE" }),
 }

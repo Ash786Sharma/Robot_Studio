@@ -30,5 +30,7 @@ export interface TreeNode {
     | (string & {});
   "block type"?: "ob" | "fc" | "fb" | "db";
   icon: string;
+  kind?: "folder" | "file";
+  fileType?: string | null;
   children?: TreeNode[];
 }
