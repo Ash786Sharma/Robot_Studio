@@ -18,6 +18,7 @@ function forwardedHost(hostname: string): string | undefined {
 
 export function resolveApiUrl(): string {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
+  if (import.meta.env.DEV) return ""
   if (typeof window === "undefined" || isLocalHostname(window.location.hostname)) {
     return `http://localhost:${BACKEND_PORT}`
   }
