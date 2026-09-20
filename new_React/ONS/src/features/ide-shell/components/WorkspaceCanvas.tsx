@@ -26,6 +26,7 @@ import { RealReactFlowCanvas } from "@/features/editor/components/GraphEditor"
 import { RealThreeJsViewer } from "@/features/simulation/components/Viewer3D"
 import { DataBlockEditor } from "@/features/editor/components/DataBlockEditor"
 import { HmiEditor } from "@/features/editor/components/HmiEditor"
+import { ConfigEditor } from "@/features/editor/components/ConfigEditor"
 
 interface TabConfig {
   id: string;
@@ -60,7 +61,12 @@ export const WorkspaceCanvas = () => {
     fileId: file.id,
     label: file.name,
     icon: file.icon as keyof typeof LucideIcons,
-    view: file.type === "db" || ["rprg", "rsprg", "scl"].some((extension) => file.name.toLowerCase().endsWith(`.${extension}`)) || file.type === "hmi ui" ? "editor" : "flow",
+    view:
+      file.type === "hardware config" || file.type === "software config"
+        ? "config"
+        : file.type === "db" || ["rprg", "rsprg", "scl"].some((extension) => file.name.toLowerCase().endsWith(`.${extension}`)) || file.type === "hmi ui"
+          ? "editor"
+          : "flow",
   }))
   const viewerIsOpen = (leftTab === "viewer" || rightTab === "viewer") && !hiddenTabs.includes("viewer")
   const visibleTabs = viewerIsOpen
@@ -77,6 +83,9 @@ export const WorkspaceCanvas = () => {
         break
       case "flow":
         editorContent = <RealReactFlowCanvas showChanges={showChanges[pane]} onCloseChanges={() => setShowChanges(pane, false)} device={file?.device} safetyProgram={file?.safety ?? false} fileName={file?.name} />
+        break
+      case "config":
+        editorContent = <ConfigEditor fileName={file?.name} fileId={file?.id} deviceKind={file?.device} />
         break
       case "viewer":
         editorContent = null

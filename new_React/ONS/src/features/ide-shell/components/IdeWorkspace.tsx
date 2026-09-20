@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/resizable"
 import { ScrollArea } from "@/components/ui/scroll-area" // ⚡ INTEGRATED: Standardised unstyled Base UI scroll wrapper
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { FileTreeItem } from "@/features/ide-shell/file-tree/FileTreeItem"
+import { FileTreeItem, type DraftNode } from "@/features/ide-shell/file-tree/FileTreeItem"
 import { mapFileNodeToTreeNode } from "@/features/ide-shell/file-tree/fileNodeMapper"
 import { filesApi } from "@/core/api/filesApi"
 import { projectsApi } from "@/core/api/projectsApi"
@@ -17,12 +17,15 @@ import { useLayoutStore } from "@/core/store/layoutStore";
 import { useWorkspaceStore, type WorkspaceFile } from "@/core/store/workspaceStore";
 import { useProjectStore } from "@/core/store/projectStore";
 import { useFileSyncSocket } from "@/core/socket/useFileSyncSocket";
+import { TerminalView } from "@/features/console/components/TerminalView";
 import type { MenuItemData } from "@/features/ide-shell/components/IdeMenuItem";
 import type { TreeNode } from "@/features/ide-shell/file-tree/fileTree.types";
 
 export const IdeWorkspace = () => {
   // Shared state controller to handle active selections across your IDE workbench canvas
   const [activeNodeId, setActiveNodeId] = useState<string | undefined>(undefined)
+  const [renamingNodeId, setRenamingNodeId] = useState<string | null>(null)
+  const [draftNode, setDraftNode] = useState<DraftNode | null>(null)
   const activeView = useLayoutStore((state) => state.activeView);
   const isExplorerOpen = useLayoutStore((state) => state.isExplorerOpen);
   const isTerminalOpen = useLayoutStore((state) => state.isTerminalOpen);
@@ -56,29 +59,19 @@ export const IdeWorkspace = () => {
     await queryClient.invalidateQueries({ queryKey: ["file-tree", activeProjectId] });
   };
 
+  const parentIdFor = (nodeId: string) => (nodeId === activeProjectId ? undefined : nodeId);
+
   const handleFileTreeAction = async (item: MenuItemData, node: TreeNode) => {
     if (!activeProjectId) return;
 
     if (["new-folder", "add-device", "add-config"].includes(item.id)) {
-      const defaultName = item.id === "add-device" ? "New Device" : item.id === "add-config" ? "New Configuration" : "New Folder";
-      const name = window.prompt("Folder name", defaultName)?.trim();
-      if (!name) return;
-      await filesApi.create(activeProjectId, { name, kind: "folder", parentId: node.id });
-      await refreshFileTree();
+      const placeholder = item.id === "add-device" ? "New Device" : item.id === "add-config" ? "New Configuration" : "New Folder";
+      setDraftNode({ parentId: node.id, kind: "folder", icon: "FolderPlus", placeholder });
       return;
     }
 
     if (item.id === "new-file") {
-      const name = window.prompt("File name", "New.scl")?.trim();
-      if (!name) return;
-      const extension = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "scl";
-      await filesApi.create(activeProjectId, {
-        name,
-        kind: "file",
-        fileType: extension,
-        parentId: node.id === activeProjectId ? undefined : node.id,
-      });
-      await refreshFileTree();
+      setDraftNode({ parentId: node.id, kind: "file", fileType: "scl", icon: "FilePlus", placeholder: "New.scl" });
       return;
     }
 
@@ -92,24 +85,13 @@ export const IdeWorkspace = () => {
 
     if (fileTypeByAction[item.id]) {
       const fileType = fileTypeByAction[item.id];
-      const defaultName = fileType === "hmi ui" ? "New Screen" : `New.${fileType}`;
-      const name = window.prompt("File name", defaultName)?.trim();
-      if (!name) return;
-      await filesApi.create(activeProjectId, {
-        name,
-        kind: "file",
-        fileType,
-        parentId: node.id,
-      });
-      await refreshFileTree();
+      const placeholder = fileType === "hmi ui" ? "New Screen" : `New.${fileType}`;
+      setDraftNode({ parentId: node.id, kind: "file", fileType, icon: "FilePlus", placeholder });
       return;
     }
 
     if (["rename-item", "rename-device"].includes(item.id)) {
-      const name = window.prompt("New name", node.name)?.trim();
-      if (!name || name === node.name) return;
-      await filesApi.rename(activeProjectId, node.id, name);
-      await refreshFileTree();
+      setRenamingNodeId(node.id);
       return;
     }
 
@@ -126,6 +108,44 @@ export const IdeWorkspace = () => {
       await filesApi.remove(activeProjectId, node.id);
       await refreshFileTree();
     }
+  };
+
+  const FIXED_EXTENSION_TYPES = new Set(["rprg", "rgprg", "rsprg", "rsgprg"]);
+
+  const handleDraftCommit = async (name: string) => {
+    const pending = draftNode;
+    setDraftNode(null);
+    const trimmed = name.trim();
+    if (!activeProjectId || !pending || !trimmed) return;
+
+    let finalName = trimmed;
+    let fileType = pending.fileType;
+
+    if (pending.kind === "file") {
+      if (pending.fileType && FIXED_EXTENSION_TYPES.has(pending.fileType) && !trimmed.includes(".")) {
+        // Fixed-extension actions (new-rprg, ...) only ask for the base name.
+        finalName = `${trimmed}.${pending.fileType}`;
+      } else if (pending.fileType === "scl") {
+        // Generic "new-file" action: infer the type from whatever the user typed.
+        fileType = trimmed.includes(".") ? trimmed.split(".").pop()!.toLowerCase() : "scl";
+      }
+    }
+
+    await filesApi.create(activeProjectId, {
+      name: finalName,
+      kind: pending.kind,
+      fileType,
+      parentId: parentIdFor(pending.parentId),
+    });
+    await refreshFileTree();
+  };
+
+  const handleRenameCommit = async (node: TreeNode, name: string) => {
+    setRenamingNodeId(null);
+    const trimmed = name.trim();
+    if (!activeProjectId || !trimmed || trimmed === node.name) return;
+    await filesApi.rename(activeProjectId, node.id, trimmed);
+    await refreshFileTree();
   };
 
   const isBottomPanelOpen = isTerminalOpen || activeView === "Problems";
@@ -165,6 +185,12 @@ export const IdeWorkspace = () => {
                       onNodeSelect={(node) => setActiveNodeId(node.id)}
                       onFileOpen={(file: WorkspaceFile) => openFile(file)}
                       onAction={handleFileTreeAction}
+                      renamingNodeId={renamingNodeId}
+                      onRenameCommit={handleRenameCommit}
+                      onRenameCancel={() => setRenamingNodeId(null)}
+                      draftNode={draftNode}
+                      onDraftCommit={handleDraftCommit}
+                      onDraftCancel={() => setDraftNode(null)}
                     />
                   ))}
                 </div>
@@ -199,20 +225,17 @@ export const IdeWorkspace = () => {
               {/* Panel Three: Diagnostic Console/Terminal Window Pane */}
               <ResizablePanel 
                 defaultSize={30} 
-                className="rounded-sm border border-[var(--border)] bg-[var(--ide-panel-bg)] transition-colors duration-150"
+                className="rounded-sm border border-[var(--border)] bg-[var(--ide-panel-bg)] transition-colors duration-150 overflow-hidden"
               >
-                <div className="flex h-full items-center justify-center p-6 text-[var(--ide-text-inactive)]">
-                  {activeView === "Problems" ? (
-                    /* Render Problems view if Nav items activated it */
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="font-semibold text-xs tracking-wide uppercase">Problems / Errors</span>
-                      <span className="text-[11px] text-[var(--ide-text-inactive)]/70">No problems have been detected in the workspace.</span>
-                    </div>
-                  ) : (
-                    /* Default Fallback: Standard Terminal Panel */
-                    <span className="font-semibold text-xs tracking-wide">TERMINAL / CONSOLE</span>
-                  )}
-                </div>
+                {activeView === "Problems" ? (
+                  /* Render Problems view if Nav items activated it */
+                  <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-[var(--ide-text-inactive)]">
+                    <span className="font-semibold text-xs tracking-wide uppercase">Problems / Errors</span>
+                    <span className="text-[11px] text-[var(--ide-text-inactive)]/70">No problems have been detected in the workspace.</span>
+                  </div>
+                ) : (
+                  <TerminalView />
+                )}
               </ResizablePanel>
               </>}
             </ResizablePanelGroup>

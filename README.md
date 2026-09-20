@@ -13,9 +13,9 @@ React + Vite frontend
 	v
 Node.js + Express backend
 	|
-	+-- PostgreSQL: users, projects, file-tree metadata
-	+-- Local storage: project file contents and assets
-	+-- WebSocket: live project file synchronization
+	+-- PostgreSQL: users, projects, file-tree metadata, devices, robot library
+	+-- Local storage: project file contents, meshes, and derived .ord robot descriptions
+	+-- WebSocket: live project file synchronization, and a per-project PTY terminal
 	|
 	v
 Linux controller with FPGA
@@ -49,6 +49,10 @@ Robot_Studio/
 `new_React/ONS` and `new_React/ONSBackend` are the active applications. The
 legacy `app/` directory is not used by the current workflow.
 
+For a deeper dive into how the frontend, backend, and database fit together
+(with diagrams) — useful before contributing a feature or fix — see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Technology Stack
 
 ### Frontend
@@ -61,7 +65,8 @@ legacy `app/` directory is not used by the current workflow.
 - React Flow for graph-based editors
 - React Konva for HMI design
 - React Three Fiber, Three.js, URDF Loader, and Rapier for 3D simulation
-- Native browser WebSocket API for live file synchronization
+- `@xterm/xterm` (via `react-xtermjs`) for the in-IDE terminal
+- Native browser WebSocket API for live file synchronization and the terminal
 
 ### Backend
 
@@ -70,7 +75,8 @@ legacy `app/` directory is not used by the current workflow.
 - PostgreSQL 16 with Drizzle ORM and Drizzle Kit
 - Zod request validation
 - JWT authentication
-- `ws` for raw WebSockets
+- `ws` for raw WebSockets, `node-pty` for real per-project terminal shells
+- `multer` for multipart uploads (robot description/mesh files), `fast-xml-parser` for URDF parsing
 - Pino logging, Helmet security headers, and rate limiting
 - Swagger UI/OpenAPI documentation
 - Local disk storage for project file contents
@@ -98,10 +104,12 @@ new_React/ONSBackend/
 │   ├── modules/
 │   │   ├── auth/                    # Signup, login, WS tickets
 │   │   ├── projects/                # Project CRUD
-│   │   └── files/                   # File tree and content CRUD
+│   │   ├── files/                   # File tree and content CRUD
+│   │   ├── devices/                 # Robot/PLC/HMI devices, folder scaffolding
+│   │   └── robots/                  # .ord schema, URDF import, robot library
 │   ├── middlewares/                 # Auth, validation, errors
 │   ├── storage/                     # Local storage provider
-│   ├── ws/                          # Raw WebSocket synchronization
+│   ├── ws/                          # File-sync and terminal WebSocket gateways
 │   ├── errors/
 │   ├── types/
 │   └── utils/
@@ -122,9 +130,9 @@ new_React/ONS/src/
 │   └── store/                       # Zustand stores
 ├── features/
 │   ├── auth/                        # Login and authentication gate
-│   ├── console/                     # Terminal UI
-│   ├── editor/                      # Monaco, graph, HMI, and DB editors
-│   ├── ide-shell/                   # IDE layout, navigation, file tree
+│   ├── console/                     # xterm.js terminal, backed by a real PTY shell
+│   ├── editor/                      # Monaco, graph, HMI, DB, and device config editors
+│   ├── ide-shell/                   # IDE layout, navigation, file tree, New Project modal
 │   ├── simulation/                  # 3D viewer and viewport
 │   └── workflow/
 ├── hooks/
@@ -138,6 +146,9 @@ new_React/ONS/src/
 - npm
 - Docker with Docker Compose
 - Git
+- A C/C++ toolchain and Python (only needed if `npm install` in
+  `new_React/ONSBackend` has to build `node-pty` from source instead of using
+  a prebuilt binary for your platform)
 
 ## First-Time Setup
 
@@ -192,67 +203,20 @@ Apply migrations:
 npm run db:migrate
 ```
 
-Drizzle Kit is the database toolkit used by the backend. Open Drizzle Studio
-to browse and edit PostgreSQL data in a visual database interface. Studio is an
-optional separate process and is intentionally not started by `npm run dev`.
-This avoids keeping an unnecessary database UI open and avoids port `4983`
-conflicts.
-
-```bash
-npm run db:studio
-```
-
 The same Drizzle Kit commands are available from the repository root:
 
 ```bash
 npm run db:generate  # Generate a migration after changing a schema
 npm run db:migrate   # Apply pending migrations
-npm run db:studio    # Start the database browser
 ```
 
-Drizzle Studio connects using `DATABASE_URL` from `ONSBackend/.env`. When using
-Codespaces, open the Studio web UI with the forwarded bridge host and port:
-
-```text
-https://local.drizzle.studio/?host=<codespace>-4983.app.github.dev&port=443
-```
-
-Because the Studio UI runs in the browser outside the container, port `4983`
-must be reachable through the Codespaces tunnel. For a temporary development
-session, set the port to public, then return it to private when finished:
-
-```bash
-gh codespace ports visibility 4983:public --codespace "$CODESPACE_NAME"
-# use Drizzle Studio
-gh codespace ports visibility 4983:private --codespace "$CODESPACE_NAME"
-```
-
-On a local machine, Drizzle may also print
-[https://local.drizzle.studio](https://local.drizzle.studio). The current schema
-contains:
+The current schema contains:
 
 - `users` — registered ONS users
 - `projects` — project metadata and ownership
 - `file_nodes` — project folders, files, names, types, and local-storage keys
-
-Keep PostgreSQL running while using Studio. Stop Studio with `Ctrl+C` in its
-terminal. After changing a schema, generate and apply a migration before
-expecting the new table or column to appear:
-
-If Studio reports `EADDRINUSE` for port `4983`, another Studio instance is
-already running. Open the existing forwarded URL instead of starting a second
-instance. Alternatively, start another instance on a different port and expose
-that port through the Codespaces Ports panel:
-
-```bash
-npm run db:studio -- --port 4984
-```
-
-To find the process using the default Studio port:
-
-```bash
-ss -ltnp | grep ':4983'
-```
+- `devices` — robot/PLC/HMI devices attached to a project (one per kind for now)
+- `robot_library_entries` — reusable robot descriptions (`.ord`), independent of any project
 
 After changing a Drizzle schema:
 
@@ -260,6 +224,24 @@ After changing a Drizzle schema:
 npm run db:generate
 npm run db:migrate
 ```
+
+### Connecting a database client
+
+Use a regular Postgres client instead of Drizzle Studio or Adminer — it works
+the same way whether you're on `localhost` or a forwarded Codespaces tab:
+
+- **VS Code PostgreSQL extension** (`ms-ossdata.vscode-pgsql`): open the
+  elephant icon in the Activity Bar → **Add Connection**, then use
+  `Host: localhost`, `Port: 5432`, `Database: ons`, `User: ons`,
+  `Password: ons_dev_password`.
+- **`psql` CLI**:
+
+  ```bash
+  psql "postgres://ons:ons_dev_password@localhost:5432/ons"
+  ```
+
+Both connect directly to the `postgres` container port published by
+`docker-compose.yml`, so PostgreSQL must be running first (see above).
 
 ## Running the Applications
 
@@ -277,11 +259,17 @@ This command:
 
 1. Installs frontend/backend dependencies if their `node_modules` directories
 	are missing.
-2. Starts PostgreSQL through Docker Compose and waits for it to become ready.
+2. Starts PostgreSQL through Docker Compose and waits for it to become
+	healthy.
 3. Applies the Drizzle migrations.
 4. Reuses a healthy ONS backend already running on port `3000`, or starts one.
-5. Starts the Vite frontend.
-6. Stops the backend and frontend child processes when you press `Ctrl+C`.
+5. Starts the Vite frontend (fixed at port `5174`), reusing it if already
+	running.
+6. Waits for backend/frontend to actually respond, then prints the correct
+	URL for each — using the forwarded `https://<codespace>-<port>
+	.app.github.dev` address automatically when running in a Codespace.
+7. Stops the backend and frontend child processes when you press `Ctrl+C`.
+	One of them exiting on its own does not stop the other.
 
 PostgreSQL remains running after `Ctrl+C`. Stop it separately with:
 
@@ -290,12 +278,15 @@ cd /workspaces/Robot_Studio/new_React/ONSBackend
 docker compose down
 ```
 
-If the launcher reports `EADDRINUSE`, an older backend or frontend process is
-already running. Reuse that existing process or stop it before running the
-root command again. Check listeners with:
+Connect to the database with the PostgreSQL VS Code extension or `psql` (see
+the Database section above) — no extra service needs to be started for that.
+
+If the launcher reports a port already in use for the backend or frontend, it
+prints a message and reuses the existing one instead of crashing. Check
+listeners with:
 
 ```bash
-ss -ltnp | grep -E ':3000|:5173|:5174'
+ss -ltnp | grep -E ':3000|:5174'
 ```
 
 ### Manual startup alternative
@@ -323,7 +314,7 @@ Backend URLs:
 API:       http://localhost:3000
 Health:    http://localhost:3000/api/health
 Docs:      http://localhost:3000/api-docs
-WebSocket: ws://localhost:3000/ws/files
+WebSocket: ws://localhost:3000/ws/files, ws://localhost:3000/ws/terminal
 ```
 
 If `npm run dev` reports `EADDRINUSE` for port `3000`, the backend is already
@@ -349,17 +340,29 @@ cd /workspaces/Robot_Studio/new_React/ONS
 npm run dev
 ```
 
-Open the URL printed by Vite. It is normally `http://localhost:5173`. If that
-port is occupied, Vite automatically selects another port such as `5174`.
+Open the URL printed by Vite: `http://localhost:5174`. The port is fixed
+(`strictPort` in `vite.config.ts`) so it never silently falls back to a
+different port — if `5174` is already taken by another instance, Vite exits
+with an error instead.
 
 ## GitHub Codespaces
 
-When using a Codespaces forwarded HTTPS URL, do not hardcode `localhost` in the
-browser. The frontend automatically detects the forwarded backend URL from
-`window.location` when `VITE_API_URL` and `VITE_WS_URL` are not set.
+This repository has no `devcontainer.json`, so forwarded ports are **not**
+automatic — GitHub only creates a forwarded URL for a port once something in
+your connected editor session has registered it. If a forwarded URL
+(`https://<codespace>-<port>.app.github.dev`) shows "No webpage was found"
+even though `npm run dev` says the service is running, the port simply isn't
+forwarded yet:
 
-The backend port must be reachable from the browser. In Codespaces, make port
-3000 public or otherwise accessible through the Ports panel. Forwarded URLs
+1. Open the **PORTS** tab in VS Code (next to the Terminal panel).
+2. Click **Forward a Port** and add `3000` (backend) and `5174` (frontend).
+3. These are remembered for this Codespace, so this is normally a one-time
+   step per Codespace, not per session.
+
+During `npm run dev`, the frontend proxies `/api` requests to `localhost:3000`
+inside the container (`vite.config.ts`), so the browser only ever talks to the
+frontend's own origin — no CORS configuration or separate backend URL is
+needed for the app itself to work once its port is forwarded. Forwarded URLs
 follow this pattern:
 
 ```text
@@ -367,9 +370,19 @@ Frontend: https://<codespace>-5174.app.github.dev
 Backend:  https://<codespace>-3000.app.github.dev
 ```
 
-If Vite uses another port, use the URL printed in its terminal. Development
-CORS accepts localhost ports and GitHub Codespaces origins; production should
-use one explicit `CORS_ORIGIN`.
+PostgreSQL (port `5432`) does not need to be forwarded — connect to it with
+the PostgreSQL VS Code extension or `psql` from inside the Codespace/container
+(see the Database section above), not from a browser tab.
+
+These ports default to **private** visibility, which is correct for local
+development — opening them prompts a GitHub login (you, as the owner) rather
+than being world-readable. Do not switch them to public just to make them
+load; if a private forwarded URL doesn't load, it means the port isn't
+forwarded yet (see steps above), not that visibility needs to change.
+
+Backend CORS (`CORS_ORIGIN` in `.env`) only matters if you call the API
+directly from a different origin than the frontend dev proxy, e.g. Swagger
+UI's "Try it out" or a standalone script.
 
 ## API Overview
 
@@ -406,9 +419,37 @@ PATCH  /api/projects/:projectId/files/:fileId
 DELETE /api/projects/:projectId/files/:fileId
 ```
 
+Devices (robot/PLC/HMI, scaffolds the device's folder tree on creation):
+
+```text
+GET    /api/projects/:projectId/devices
+POST   /api/projects/:projectId/devices
+DELETE /api/projects/:projectId/devices/:deviceId
+```
+
+`POST` is `multipart/form-data`: `kind` (`robot`|`plc`|`hmi`), `name`, and for
+robots either `libraryEntryId` (clone from the robot library) or an uploaded
+`ord` file, or a `urdf` file plus its `meshes` (`.stl`/`.dae`/`.obj`/`.gltf`/`.glb`).
+
+Robot library (reusable `.ord` robot descriptions, independent of any project):
+
+```text
+GET    /api/robot-library
+POST   /api/robot-library
+GET    /api/robot-library/:id
+DELETE /api/robot-library/:id
+```
+
 The frontend obtains a short-lived ticket through `/api/auth/ws-ticket` and
 opens `/ws/files?ticket=<ticket>&projectId=<project-id>`. Supported messages
 are `file:create`, `file:update`, `file:rename`, and `file:delete`.
+
+The same ticket also authorizes `/ws/terminal?ticket=<ticket>&projectId=<project-id>`,
+which spawns a real PTY-backed shell (`node-pty`) cwd'd into that project's
+storage directory — one shell process per socket, killed on disconnect. The
+frontend's `useTerminal` hook wires this to an `xterm.js` instance; messages
+are `{ type: "input" | "resize" }` (client to server) and
+`{ type: "output" | "exit" }` (server to client).
 
 ## Validation and Tests
 

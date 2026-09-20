@@ -7,6 +7,10 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react(), tailwindcss(),],
   server: {
+    // Fixed port so the dev script can print a reliable URL instead of
+    // guessing which port Vite fell back to.
+    port: 5174,
+    strictPort: true,
     proxy: {
       "/api": "http://localhost:3000",
     },

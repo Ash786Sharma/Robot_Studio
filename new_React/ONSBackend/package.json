@@ -13,7 +13,7 @@
     "clean": "rm -rf dist",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",
+    "db:studio": "drizzle-kit studio --port 4983",
     "test": "vitest run"
   },
   "dependencies": {
@@ -23,8 +23,11 @@
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
     "express-rate-limit": "^7.5.0",
+    "fast-xml-parser": "^5.11.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "node-pty": "^1.1.0",
     "pg": "^8.21.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
@@ -38,6 +41,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
     "@types/node": "^25.9.2",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",

@@ -10,6 +10,8 @@ import { logger } from "./config/logger.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { projectsRoutes } from "./modules/projects/projects.routes.js";
 import { filesRoutes } from "./modules/files/files.routes.js";
+import { devicesRoutes } from "./modules/devices/devices.routes.js";
+import { robotLibraryRoutes } from "./modules/robots/robotLibrary.routes.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 // In dev, the frontend can be reached via localhost on any port (Vite falls back
@@ -57,13 +59,22 @@ export function createApp() {
 
   app.use("/api/auth", authLimiter, authRoutes);
   app.use("/api/projects/:projectId/files", filesRoutes);
+  app.use("/api/projects/:projectId/devices", devicesRoutes);
+  app.use("/api/robot-library", robotLibraryRoutes);
   app.use("/api/projects", projectsRoutes);
 
   const swaggerSpec = swaggerJsDoc({
     definition: {
       openapi: "3.0.0",
       info: { title: "ONS Backend API", version: "1.0.0" },
-      servers: [{ url: `http://localhost:${env.PORT}` }],
+      // Relative so "Try it out" targets whatever origin served the docs page
+      // (localhost, a forwarded Codespaces URL, etc.) instead of a fixed host.
+      servers: [{ url: "/" }],
+      components: {
+        securitySchemes: {
+          bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+        },
+      },
     },
     apis: ["./src/modules/**/*.routes.ts"],
   });

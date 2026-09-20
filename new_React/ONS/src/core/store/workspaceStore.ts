@@ -1,6 +1,6 @@
 import { create } from "zustand"
 
-export type ViewType = "editor" | "flow" | "viewer"
+export type ViewType = "editor" | "flow" | "viewer" | "config"
 export type SaveStatus = "saved" | "unsaved"
 
 export interface WorkspaceTabStatus {
@@ -88,7 +88,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
     })),
     openFile: (activeFile) => set((state) => {
       const editorFile = activeFile.type === "db" || ["rprg", "rsprg", "scl"].some((extension) => activeFile.name.toLowerCase().endsWith(`.${extension}`)) || activeFile.type === "hmi ui"
-      const targetTab: ViewType = editorFile ? "editor" : "flow"
+      const isConfigFile = activeFile.type === "hardware config" || activeFile.type === "software config"
+      const targetTab: ViewType = isConfigFile ? "config" : editorFile ? "editor" : "flow"
 
       return {
         activeFile,
@@ -105,10 +106,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
       const file = state.openFiles.find((openFile) => openFile.id === fileId)
       if (!file) return state
       const editorFile = file.type === "db" || ["rprg", "rsprg", "scl"].some((extension) => file.name.toLowerCase().endsWith(`.${extension}`)) || file.type === "hmi ui"
+      const isConfigFile = file.type === "hardware config" || file.type === "software config"
       return {
         activeFile: file,
         activeFileByPane: { ...state.activeFileByPane, [pane]: fileId },
-        [pane === "left" ? "leftTab" : "rightTab"]: editorFile ? "editor" : "flow",
+        [pane === "left" ? "leftTab" : "rightTab"]: isConfigFile ? "config" : editorFile ? "editor" : "flow",
         isSplitView: pane === "left" ? state.isSplitView : true,
       }
     }),

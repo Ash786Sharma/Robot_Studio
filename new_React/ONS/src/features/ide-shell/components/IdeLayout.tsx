@@ -4,6 +4,7 @@ import {IdeHeader} from "./IdeHeader"
 import {IdeNavRail} from "./IdeNavRail"
 import {IdeWorkspace} from "./IdeWorkspace"
 import {IdeFooter} from "./IdeFooter"
+import { NewProjectModal } from "./NewProjectModal"
 
 
 export const IdeLayout = () => {
@@ -22,6 +23,7 @@ export const IdeLayout = () => {
         <IdeWorkspace />
       </div>
       <IdeFooter />
+      <NewProjectModal />
     </div>
   )
 }

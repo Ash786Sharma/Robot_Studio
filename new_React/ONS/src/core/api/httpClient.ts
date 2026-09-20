@@ -22,13 +22,15 @@ interface RequestOptions {
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const token = useAuthStore.getState().token
-  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  const isFormData = options.body instanceof FormData
+  const headers: Record<string, string> = {}
+  if (!isFormData) headers["Content-Type"] = "application/json"
   if (token) headers.Authorization = `Bearer ${token}`
 
   const response = await fetch(`${API_URL}${path}`, {
     method: options.method ?? "GET",
     headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    body: options.body === undefined ? undefined : isFormData ? (options.body as FormData) : JSON.stringify(options.body),
   })
 
   if (response.status === 204) return undefined as T
