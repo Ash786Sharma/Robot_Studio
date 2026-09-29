@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { localStorage } from "../../storage/localStorage.provider.js";
+import { localStorage } from "../../storageLib/localStorage.provider.js";
 import { NotFoundError } from "../../errors/AppError.js";
 import { robotLibraryRepository } from "./robotLibrary.repository.js";
 import { resolveOrdFromUpload, type OrdUploadFiles } from "./ordUpload.helper.js";

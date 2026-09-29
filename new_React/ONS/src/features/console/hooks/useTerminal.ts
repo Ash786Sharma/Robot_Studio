@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useXTerm } from "react-xtermjs"
 import { FitAddon } from "@xterm/addon-fit"
 import { authApi } from "@/core/api/authApi"
@@ -11,14 +11,18 @@ type TerminalServerMessage = { type: "output"; data: string } | { type: "exit"; 
 /** Wires an xterm.js instance to a real PTY-backed shell over `/ws/terminal`. */
 export function useTerminal(projectId: string | null) {
   const fitAddonRef = useRef(new FitAddon())
+  // react-xtermjs recreates the whole Terminal instance whenever `options`/`addons`
+  // change identity — new literals every render would tear it down in a loop.
+  const addons = useMemo(() => [fitAddonRef.current], [])
+  const options = useMemo(() => ({
+    cursorBlink: true,
+    convertEol: true,
+    fontSize: 13,
+    theme: { background: "#09090b" },
+  }), [])
   const { ref, instance } = useXTerm({
-    addons: [fitAddonRef.current],
-    options: {
-      cursorBlink: true,
-      convertEol: true,
-      fontSize: 13,
-      theme: { background: "#09090b" },
-    },
+    addons,
+    options,
   })
   const socketRef = useRef<WebSocket | null>(null)
 
@@ -48,6 +52,8 @@ export function useTerminal(projectId: string | null) {
       }
 
       socket.onclose = () => dataDisposable.dispose()
+    }).catch((err) => {
+      if (!cancelled) console.warn("Terminal socket unavailable:", err)
     })
 
     return () => {

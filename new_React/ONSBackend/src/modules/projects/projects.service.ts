@@ -1,8 +1,7 @@
 import { projectsRepository } from "./projects.repository.js";
 import { NotFoundError } from "../../errors/AppError.js";
 import type { CreateProjectInput } from "./projects.validators.js";
-import { filesRepository } from "../files/files.repository.js";
-import { localStorage } from "../../storage/localStorage.provider.js";
+import { localStorage } from "../../storageLib/localStorage.provider.js";
 
 export const projectsService = {
   create(ownerId: string, input: CreateProjectInput) {
@@ -25,8 +24,10 @@ export const projectsService = {
 
   async remove(id: string, ownerId: string) {
     const project = await projectsService.getById(id, ownerId);
-    const nodes = await filesRepository.listByProject(project.id);
-    await Promise.all(nodes.filter((node) => node.storageKey).map((node) => localStorage.delete(node.storageKey!)));
+    // Every storage key any file_node/device ever wrote is prefixed with the
+    // project id, so deleting that whole prefix cleans up everything in one
+    // shot — including anything an incomplete per-row cleanup missed.
+    await localStorage.delete(project.id);
     await projectsRepository.remove(project.id);
   },
 };

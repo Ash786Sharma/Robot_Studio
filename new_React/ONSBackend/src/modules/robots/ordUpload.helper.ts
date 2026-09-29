@@ -1,4 +1,4 @@
-import { localStorage } from "../../storage/localStorage.provider.js";
+import { localStorage } from "../../storageLib/localStorage.provider.js";
 import { ValidationError } from "../../errors/AppError.js";
 import { ordSchema, type OrdDocument } from "./ord.schema.js";
 import { parseUrdfToOrd, type ResolvedMesh } from "./urdfImport.service.js";
@@ -13,8 +13,17 @@ export interface OrdUploadFiles {
   ordFile?: UploadedFile;
   /** A URDF file to derive an .ord document from. */
   urdfFile?: UploadedFile;
-  /** Visual/collision mesh files referenced by `urdfFile`. */
+  /** Visual mesh files referenced by `urdfFile`'s <visual> tags. */
   meshFiles?: UploadedFile[];
+  /**
+   * Collision mesh files referenced by `urdfFile`'s <collision> tags. Kept as
+   * a separate upload field for clarity (robots often use lower-poly meshes
+   * here), but resolved into the same by-filename lookup as `meshFiles` —
+   * which array a mesh ends up in (`ord.meshes.visual` vs `.collision`) is
+   * decided by which URDF tag references its filename, not which field it
+   * was uploaded under.
+   */
+  collisionMeshFiles?: UploadedFile[];
 }
 
 const MESH_EXTENSIONS = new Set(["stl", "dae", "obj", "gltf", "glb"]);
@@ -46,7 +55,7 @@ export async function resolveOrdFromUpload(storagePrefix: string, files: OrdUplo
 
   if (files.urdfFile) {
     const meshByBasename = new Map<string, ResolvedMesh>();
-    for (const mesh of files.meshFiles ?? []) {
+    for (const mesh of [...(files.meshFiles ?? []), ...(files.collisionMeshFiles ?? [])]) {
       const ext = extensionOf(mesh.originalname);
       if (!MESH_EXTENSIONS.has(ext)) {
         throw new ValidationError(`Unsupported mesh file type: ${mesh.originalname}`);

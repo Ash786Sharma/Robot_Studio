@@ -9,17 +9,17 @@
   {
     "groupId": "Backend File Operations",
     "items": [
-      { "id": "new-folder", "text": "New Folder", "iconName": "FolderPlus", "showOn": ["Project workspace", "device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder"] },
-      { "id": "new-file", "text": "New File", "iconName": "FilePlus", "showOn": ["Project workspace", "device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder"] },
-      { "id": "rename-item", "text": "Rename", "iconName": "Edit2", "showOn": ["device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] },
-      { "id": "delete-item", "text": "Delete", "iconName": "Trash2", "variant": "danger", "showOn": ["device folder", "robot folder", "plc folder", "hmi folder", "program folder", "safety program folder", "Screen folder", "robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui"] }
+      { "id": "new-folder", "text": "New Folder", "iconName": "FolderPlus", "showOn": ["device folder", "plc folder", "hmi folder", "robot program folder", "robot safety program folder", "plc program folder", "plc safety program folder", "Screen folder"] },
+      { "id": "new-file", "text": "New File", "iconName": "FilePlus", "showOn": ["device folder", "plc folder", "hmi folder", "plc program folder", "plc safety program folder", "Screen folder"] },
+      { "id": "rename-item", "text": "Rename", "iconName": "Edit2", "showOn": ["device folder", "Screen folder", "robot Safety program file", "robot program file", "rprg", "rgprg", "rsprg", "rsgprg", "ld", "graph", "scl", "db", "hmi ui"] },
+      { "id": "delete-item", "text": "Delete", "iconName": "Trash2", "variant": "danger", "showOn": ["device folder", "Screen folder", "program subfolder", "robot Safety program file", "robot program file", "rprg", "rgprg", "rsprg", "rsgprg", "ld", "graph", "scl", "db", "hmi ui"] }
     ]
   },
   {
     "groupId": "Network Nodes",
     "items": [
-      { "id": "add-device", "text": "Add Device", "iconName": "Plus", "showOn": ["device folder"] },
-      { "id": "add-config", "text": "Add Configuration", "iconName": "Settings", "showOn": ["robot folder", "plc folder", "hmi folder"] },
+      { "id": "add-device", "text": "Add Device", "iconName": "Plus", "showOn": ["Project workspace", "device folder"] },
+      { "id": "add-config", "text": "Add Configuration", "iconName": "Settings", "showOn": ["plc folder", "hmi folder"] },
       { "id": "rename-device", "text": "Rename Device", "iconName": "Edit2", "showOn": ["robot folder", "plc folder", "hmi folder"] },
       { "id": "remove-device", "text": "Remove Device", "iconName": "X", "variant": "danger", "showOn": ["robot folder", "plc folder", "hmi folder"] }
     ]
@@ -33,15 +33,15 @@
   {
     "groupId": "Standard Logic Operations",
     "items": [
-      { "id": "new-rprg", "text": "New .rprg File", "iconName": "FileCode", "showOn": ["program folder"] },
-      { "id": "new-rgprg", "text": "New .rgprg File", "iconName": "FileCode", "showOn": ["program folder"] }
+      { "id": "new-rprg", "text": "New .rprg File", "iconName": "FileCode", "showOn": ["robot program folder"] },
+      { "id": "new-rgprg", "text": "New .rgprg File", "iconName": "FileCode", "showOn": ["robot program folder"] }
     ]
   },
   {
     "groupId": "Safety Engineering Operations",
     "items": [
-      { "id": "new-rsprg", "text": "New .rsprg File", "iconName": "Shield", "showOn": ["safety program folder"] },
-      { "id": "new-rsgprg", "text": "New .rsgprg File", "iconName": "Shield", "showOn": ["safety program folder"] }
+      { "id": "new-rsprg", "text": "New .rsprg File", "iconName": "Shield", "showOn": ["robot safety program folder"] },
+      { "id": "new-rsgprg", "text": "New .rsgprg File", "iconName": "Shield", "showOn": ["robot safety program folder"] }
     ]
   },
   {

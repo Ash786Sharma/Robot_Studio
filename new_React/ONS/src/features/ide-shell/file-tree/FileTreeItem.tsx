@@ -31,13 +31,19 @@ interface FileTreeItemProps {
   draftNode?: DraftNode | null;
   onDraftCommit?: (name: string) => void;
   onDraftCancel?: () => void;
+  /** Nearest ancestor device root's type ("robot folder" | "plc folder" | "hmi folder"), so shared folder types like "program folder" can get device-appropriate menu actions. */
+  deviceKind?: string;
+  /** Inherited from the nearest ancestor "program folder" (Programs vs Safety Programs), so subfolders/files nested inside get the same menu as their parent instead of re-deriving it from their own name. */
+  programCategory?: "standard" | "safety";
 }
 
+const ROBOT_FILE_TYPES = ["robot Safety program file", "robot program file", "rprg", "rgprg", "rsprg", "rsgprg"]
+
 const toWorkspaceFile = (node: TreeNode, path: string[]): WorkspaceFile | null => {
-  const isFile = ["robot Safety program file", "robot program file", "ld", "graph", "scl", "db", "hmi ui", "hardware config", "software config"].includes(node.type)
+  const isFile = [...ROBOT_FILE_TYPES, "ld", "graph", "scl", "db", "hmi ui", "hardware config", "software config"].includes(node.type)
   if (!isFile) return null
 
-  const isRobot = node.type.includes("robot")
+  const isRobot = node.type.includes("robot") || ROBOT_FILE_TYPES.includes(node.type)
   return {
     id: node.id,
     name: node.name,
@@ -46,9 +52,11 @@ const toWorkspaceFile = (node: TreeNode, path: string[]): WorkspaceFile | null =
     type: node.type,
     blockType: node["block type"],
     device: isRobot ? "robot" : node.type === "hmi ui" ? "hmi" : ["ld", "graph", "scl", "db"].includes(node.type) ? "plc" : "unknown",
-    safety: node.type.includes("Safety") || node.name.toLowerCase().includes("safety"),
+    safety: node.type.includes("Safety") || node.name.toLowerCase().includes("safety") || ["rsprg", "rsgprg"].includes(node.type),
   }
 }
+
+const DEVICE_ROOT_TYPES = new Set(["robot folder", "plc folder", "hmi folder"])
 
 export const FileTreeItem = ({ 
   node, 
@@ -64,11 +72,20 @@ export const FileTreeItem = ({
   draftNode,
   onDraftCommit,
   onDraftCancel,
+  deviceKind,
+  programCategory,
 }: FileTreeItemProps) => {
   const [isOpen, setIsOpen] = useState(depth === 0)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const hasDraftHere = draftNode?.parentId === node.id
   const hasChildren = Boolean(node.children && node.children.length > 0) || hasDraftHere
+  const childDeviceKind = DEVICE_ROOT_TYPES.has(node.type) ? node.type : deviceKind
+  // Only the top-level Programs/Safety Programs folder derives its category from its
+  // own name — once established, every nested subfolder/file inherits it unchanged.
+  const childProgramCategory: "standard" | "safety" | undefined =
+    node.type === "program folder"
+      ? (programCategory ?? (node.name.toLowerCase().includes("safety") ? "safety" : "standard"))
+      : programCategory
 
   // Auto-expand a folder that just received a new-file/new-folder draft row.
   useEffect(() => {
@@ -86,6 +103,11 @@ export const FileTreeItem = ({
 
   const commitRename = () => onRenameCommit?.(node, renameValue)
 
+  // A Programs/Safety Programs folder created *inside* another one (i.e. programCategory
+  // was already inherited from an ancestor) is a subfolder, not the protected top-level
+  // scaffold folder — it should also be deletable, unlike the top-level one.
+  const isNestedProgramFolder = node.type === "program folder" && programCategory !== undefined
+
   // ⚡ SMART FILTER ENGINE: Automatically splits folder variants based on name patterns
   const filteredActions: MenuGroupData[] = (treeActionsRaw as Array<{ groupId: string; items: any[] }>)
     .map(group => {
@@ -93,11 +115,14 @@ export const FileTreeItem = ({
         const allowedTypes = (item as any).showOn || []
         
         let evaluatedType = node.type;
-        if (node.type === "program folder" && node.name.toLowerCase().includes("safety")) {
-          evaluatedType = "safety program folder";
+        if (node.type === "program folder") {
+          const isSafety = childProgramCategory === "safety";
+          if (childDeviceKind === "robot folder") evaluatedType = isSafety ? "robot safety program folder" : "robot program folder";
+          else if (childDeviceKind === "plc folder") evaluatedType = isSafety ? "plc safety program folder" : "plc program folder";
+          else evaluatedType = isSafety ? "safety program folder" : "program folder";
         }
 
-        return allowedTypes.includes(evaluatedType)
+        return allowedTypes.includes(evaluatedType) || (isNestedProgramFolder && allowedTypes.includes("program subfolder"))
       })
 
       return {
@@ -175,17 +200,19 @@ export const FileTreeItem = ({
           )} 
           onClick={(e) => e.stopPropagation()}
         >
-          <IdeMenuItem 
-            config={filteredActions}
-            onAction={(item) => onAction?.(item, node)}
-            open={isDropdownOpen}
-            onOpenChange={setIsDropdownOpen}
-            menuButton={
-              <button className="p-1 rounded hover:bg-[var(--ide-surface-bg)] text-[var(--ide-text-inactive)] hover:text-[var(--foreground)] transition-colors outline-none">
-                <LucideIcons.MoreVertical className="h-3.5 w-3.5" />
-              </button>
-            }
-          />
+          {filteredActions.length > 0 && (
+            <IdeMenuItem 
+              config={filteredActions}
+              onAction={(item) => onAction?.(item, node)}
+              open={isDropdownOpen}
+              onOpenChange={setIsDropdownOpen}
+              menuButton={
+                <button className="p-1 rounded hover:bg-[var(--ide-surface-bg)] text-[var(--ide-text-inactive)] hover:text-[var(--foreground)] transition-colors outline-none">
+                  <LucideIcons.MoreVertical className="h-3.5 w-3.5" />
+                </button>
+              }
+            />
+          )}
         </div>
       </div>
 
@@ -208,6 +235,8 @@ export const FileTreeItem = ({
               draftNode={draftNode}
               onDraftCommit={onDraftCommit}
               onDraftCancel={onDraftCancel}
+              deviceKind={childDeviceKind}
+              programCategory={childProgramCategory}
             />
           ))}
           {hasDraftHere && draftNode && (

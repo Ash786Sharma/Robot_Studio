@@ -26,7 +26,9 @@ export const localStorage: StorageProvider = {
     return fs.readFile(resolveSafePath(key));
   },
   async delete(key) {
-    await fs.rm(resolveSafePath(key), { force: true });
+    // recursive:true also lets `key` be a directory prefix (e.g. a whole
+    // project's storage folder), not just a single file.
+    await fs.rm(resolveSafePath(key), { force: true, recursive: true });
   },
   async exists(key) {
     try {

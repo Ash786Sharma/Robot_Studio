@@ -1,10 +1,29 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { createWsTicket, login, signup } from "./auth.controller.js";
 import { requireAuth } from "../../middlewares/auth.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { loginSchema, signupSchema } from "./auth.validators.js";
 
 export const authRoutes = Router();
+
+// Brute-force protection for credential guessing — deliberately tight.
+const credentialsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ws-ticket already requires a valid JWT and is called on every socket
+// (re)connect (file sync, terminal) — a credential-guessing-strength limit
+// here just breaks normal usage, not attackers.
+const wsTicketLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * @openapi
@@ -27,7 +46,7 @@ export const authRoutes = Router();
  *       201: { description: User created, returns a JWT and the public user record }
  *       409: { description: Email already in use }
  */
-authRoutes.post("/signup", validate({ body: signupSchema }), signup);
+authRoutes.post("/signup", credentialsLimiter, validate({ body: signupSchema }), signup);
 
 /**
  * @openapi
@@ -49,7 +68,7 @@ authRoutes.post("/signup", validate({ body: signupSchema }), signup);
  *       200: { description: Returns a JWT and the public user record }
  *       401: { description: Invalid email or password }
  */
-authRoutes.post("/login", validate({ body: loginSchema }), login);
+authRoutes.post("/login", credentialsLimiter, validate({ body: loginSchema }), login);
 
 /**
  * @openapi
@@ -62,4 +81,4 @@ authRoutes.post("/login", validate({ body: loginSchema }), login);
  *       200: { description: Returns a single-use ticket for the /ws/files upgrade }
  *       401: { description: Missing or invalid bearer token }
  */
-authRoutes.get("/ws-ticket", requireAuth, createWsTicket);
+authRoutes.get("/ws-ticket", wsTicketLimiter, requireAuth, createWsTicket);

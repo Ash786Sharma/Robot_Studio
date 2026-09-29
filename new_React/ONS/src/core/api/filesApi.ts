@@ -8,6 +8,9 @@ export interface FileNodeDto {
   kind: "folder" | "file"
   fileType: string | null
   storageKey: string | null
+  /** Kinematic link nodes only: storage key of the associated visual/collision mesh, if any. */
+  visualMeshKey?: string | null
+  collisionMeshKey?: string | null
   children: FileNodeDto[]
 }
 

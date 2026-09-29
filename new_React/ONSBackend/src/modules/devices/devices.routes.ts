@@ -53,6 +53,7 @@ devicesRoutes.post(
     { name: "ord", maxCount: 1 },
     { name: "urdf", maxCount: 1 },
     { name: "meshes", maxCount: 50 },
+    { name: "collisionMeshes", maxCount: 50 },
   ]),
   createDevice,
 );

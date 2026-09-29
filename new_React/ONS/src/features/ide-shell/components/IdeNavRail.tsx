@@ -1,11 +1,15 @@
-import React from "react";
+import React, { useMemo } from "react";
 import * as LucideIcons from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { IdeBarItem } from "./IdeBarItem";
-import { IdeMenuItem } from "./IdeMenuItem";
+import { IdeMenuItem, type MenuItemData } from "./IdeMenuItem";
 import primaryMenuData from "@/config/menuConfig.json";
 import navConfig from "@/config/navConfig.json";
 import { useLayoutStore } from "@/core/store/layoutStore";
 import { useWorkspaceStore } from "@/core/store/workspaceStore";
+import { useProjectStore } from "@/core/store/projectStore";
+import { useIdeStore } from "@/core/store/ideStore";
+import { projectsApi } from "@/core/api/projectsApi";
 
 interface NavItemConfig {
   id: string;
@@ -20,6 +24,54 @@ export const IdeNavRail = () => {
   const activeView = useLayoutStore((state) => state.activeView);
   const isExplorerOpen = useLayoutStore((state) => state.isExplorerOpen);
   const isTerminalOpen = useLayoutStore((state) => state.isTerminalOpen);
+  const activeProjectId = useProjectStore((state) => state.activeProjectId);
+  const setActiveProjectId = useProjectStore((state) => state.setActiveProjectId);
+
+  const { data: allProjects } = useQuery({
+    queryKey: ["projects", "all"],
+    queryFn: projectsApi.list,
+  });
+
+  // No "last opened" tracking exists yet, so "recent" falls back to most
+  // recently updated — the current project first, then everything else.
+  const recentProjects = useMemo(() => {
+    return [...(allProjects ?? [])]
+      .sort((a, b) => {
+        if (a.id === activeProjectId) return -1;
+        if (b.id === activeProjectId) return 1;
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      })
+      .slice(0, 8);
+  }, [allProjects, activeProjectId]);
+
+  const menuData = useMemo(() => {
+    const recentChildren: MenuItemData[] =
+      recentProjects.length > 0
+        ? recentProjects.map((project) => ({
+            id: `open-recent-project:${project.id}`,
+            text: project.id === activeProjectId ? `${project.name} (current)` : project.name,
+            iconName: "FolderOpen",
+          }))
+        : [{ id: "no-recent-projects", text: "No projects yet", iconName: "Info" }];
+
+    return (primaryMenuData as Array<{ groupId: string; items: MenuItemData[] }>).map((group) => ({
+      ...group,
+      items: group.items.map((item) => (item.id === "recent-files" ? { ...item, children: recentChildren } : item)),
+    }));
+  }, [recentProjects, activeProjectId]);
+
+  const handlePrimaryMenuAction = (item: MenuItemData) => {
+    if (item.id.startsWith("open-recent-project:")) {
+      setActiveProjectId(item.id.slice("open-recent-project:".length));
+      return;
+    }
+    // Read on demand instead of subscribing to the whole store here — this
+    // component only ever needs to invoke an action, never re-render on
+    // modal-open-state changes elsewhere in the app.
+    if (item.actionName) {
+      (useIdeStore.getState() as unknown as Record<string, (() => void) | undefined>)[item.actionName]?.();
+    }
+  };
   
   const setActiveView = useLayoutStore((state) => state.setActiveView);
   const toggleExplorer = useLayoutStore((state) => state.toggleExplorer);
@@ -104,7 +156,8 @@ export const IdeNavRail = () => {
       return (
         <IdeMenuItem
           key={item.id}
-          config={primaryMenuData}
+          config={menuData}
+          onAction={handlePrimaryMenuAction}
           menuButton={barItemElement}
         />
       );

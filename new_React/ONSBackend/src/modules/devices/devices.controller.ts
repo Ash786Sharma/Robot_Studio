@@ -11,6 +11,7 @@ function pickFiles(req: Request) {
     ordFile: files.ord?.[0],
     urdfFile: files.urdf?.[0],
     meshFiles: files.meshes,
+    collisionMeshFiles: files.collisionMeshes,
   };
 }
 

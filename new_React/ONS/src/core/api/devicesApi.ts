@@ -22,6 +22,8 @@ export interface CreateDeviceInput {
   /** Robot only: a URDF file to derive an .ord from (with its mesh files). */
   urdfFile?: File
   meshFiles?: File[]
+  /** Robot only: collision meshes, separate from `meshFiles` (visual) — both are matched to the URDF by filename. */
+  collisionMeshFiles?: File[]
 }
 
 function toFormData(input: CreateDeviceInput): FormData {
@@ -32,6 +34,7 @@ function toFormData(input: CreateDeviceInput): FormData {
   if (input.ordFile) form.append("ord", input.ordFile)
   if (input.urdfFile) form.append("urdf", input.urdfFile)
   for (const mesh of input.meshFiles ?? []) form.append("meshes", mesh)
+  for (const mesh of input.collisionMeshFiles ?? []) form.append("collisionMeshes", mesh)
   return form
 }
 

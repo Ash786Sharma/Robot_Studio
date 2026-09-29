@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import { pinoHttp } from "pino-http";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsDoc from "swagger-jsdoc";
@@ -46,18 +45,11 @@ export function createApp() {
   app.use(express.json());
   app.use(pinoHttp({ logger }));
 
-  const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 20,
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
   app.get("/api/health", (_req, res) => {
     res.json({ success: true, message: "ONS backend is running" });
   });
 
-  app.use("/api/auth", authLimiter, authRoutes);
+  app.use("/api/auth", authRoutes);
   app.use("/api/projects/:projectId/files", filesRoutes);
   app.use("/api/projects/:projectId/devices", devicesRoutes);
   app.use("/api/robot-library", robotLibraryRoutes);

@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { filesRepository } from "../files/files.repository.js";
-import { localStorage } from "../../storage/localStorage.provider.js";
+import { localStorage } from "../../storageLib/localStorage.provider.js";
 import type { FileNode } from "../../db/schema/files.schema.js";
 
 interface ScaffoldNodeInput {
@@ -44,22 +44,11 @@ async function buildRobotTree(projectId: string, name: string) {
     kind: "folder",
     fileType: "robot layer folder",
   });
-  const visualModel = await createNode(projectId, root.id, {
-    name: "Visual Model",
-    kind: "folder",
-    fileType: "visual model folder",
-  });
-  const collisionModel = await createNode(projectId, root.id, {
-    name: "Collision Model",
-    kind: "folder",
-    fileType: "collision model folder",
-  });
-  await createNode(projectId, root.id, { name: "Simulation", kind: "folder", fileType: "simulation folder" });
   await createNode(projectId, root.id, { name: "Hardware Config", kind: "file", fileType: "hardware config", content: "{}" });
   await createNode(projectId, root.id, { name: "Software Config", kind: "file", fileType: "software config", content: "{}" });
   await createNode(projectId, root.id, { name: "Programs", kind: "folder", fileType: "program folder" });
   await createNode(projectId, root.id, { name: "Safety Programs", kind: "folder", fileType: "program folder" });
-  return { root, kinematicChain, visualModel, collisionModel };
+  return { root, kinematicChain };
 }
 
 async function buildPlcTree(projectId: string, name: string) {

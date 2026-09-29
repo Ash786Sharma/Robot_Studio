@@ -1,91 +1,47 @@
 import { devicesRepository } from "./devices.repository.js";
 import { deviceScaffoldService } from "./deviceScaffold.service.js";
-import { filesRepository } from "../files/files.repository.js";
-import { localStorage } from "../../storage/localStorage.provider.js";
+import { removeSubtree } from "../files/files.service.js";
 import { ConflictError, NotFoundError } from "../../errors/AppError.js";
 import { resolveOrdFromUpload, type OrdUploadFiles } from "../robots/ordUpload.helper.js";
 import { robotLibraryService } from "../robots/robotLibrary.service.js";
-import type { OrdDocument } from "../robots/ord.schema.js";
 import type { CreateDeviceInput } from "./devices.validators.js";
 
-async function copyStorageFile(oldKey: string, newPrefix: string): Promise<string> {
-  const buffer = await localStorage.read(oldKey);
-  const filename = oldKey.split("/").pop()!;
-  const newKey = `${newPrefix}/${filename}`;
-  await localStorage.write(newKey, buffer);
-  return newKey;
-}
-
-/** Deep-copies every mesh/source byte an .ord references into `storagePrefix`. */
-async function relocateOrdFiles(ord: OrdDocument, storagePrefix: string): Promise<OrdDocument> {
-  const visual = await Promise.all(
-    ord.meshes.visual.map(async (mesh) => ({ ...mesh, storageKey: await copyStorageFile(mesh.storageKey, `${storagePrefix}/meshes`) })),
-  );
-  const collision = await Promise.all(
-    ord.meshes.collision.map(async (mesh) => ({ ...mesh, storageKey: await copyStorageFile(mesh.storageKey, `${storagePrefix}/meshes`) })),
-  );
-  const source = { ...ord.source, storageKey: await copyStorageFile(ord.source.storageKey, storagePrefix) };
-  return { ...ord, source, meshes: { visual, collision } };
-}
-
+/**
+ * Attaches an .ord-derived robot description to a freshly scaffolded device
+ * tree. The Kinematic Chain folder is deliberately left empty here —
+ * `filesService.getTree` synthesizes its link/joint nodes live from this
+ * .ord on every read, so it's never persisted as file_nodes.
+ */
 async function attachRobotDescription(
   projectId: string,
   ownerId: string,
-  tree: { root: { id: string }; visualModel: { id: string }; collisionModel: { id: string } },
+  tree: { root: { id: string } },
   deviceName: string,
   files: OrdUploadFiles,
   libraryEntryId?: string,
 ) {
   const storagePrefix = `${projectId}/devices/${tree.root.id}`;
 
+  // Cloning from the robot library references its mesh/source files directly
+  // instead of duplicating them into this project's storage — the library
+  // entry already holds the canonical copy, so relocating them here would
+  // just be wasted disk space. (Trade-off: editing/removing the library
+  // entry later can affect projects that reference it this way.)
   const ord = libraryEntryId
-    ? await relocateOrdFiles(await robotLibraryService.getOrdDocument(libraryEntryId, ownerId), storagePrefix)
+    ? await robotLibraryService.getOrdDocument(libraryEntryId, ownerId)
     : await resolveOrdFromUpload(storagePrefix, files);
 
-  for (const mesh of ord.meshes.visual) {
-    await deviceScaffoldService.attachExistingFile(projectId, tree.visualModel.id, mesh.storageKey.split("/").pop()!, mesh.fileType, mesh.storageKey);
-  }
-  for (const mesh of ord.meshes.collision) {
-    await deviceScaffoldService.attachExistingFile(projectId, tree.collisionModel.id, mesh.storageKey.split("/").pop()!, mesh.fileType, mesh.storageKey);
-  }
-  await deviceScaffoldService.attachExistingFile(
-    projectId,
-    tree.root.id,
-    ord.source.storageKey.split("/").pop()!,
-    ord.source.format,
-    ord.source.storageKey,
-  );
+  // Mesh bytes and the source file already live in storage (either freshly
+  // written above for an upload, or referenced from the library) and are
+  // tracked via the .ord's `meshes`/`source` fields — no separate file_nodes
+  // are created for them; the .ord below is the canonical file the rest of
+  // the app reads.
   await deviceScaffoldService.createNode(projectId, tree.root.id, {
     name: `${deviceName}.ord`,
     kind: "file",
     fileType: "ord",
     content: JSON.stringify(ord, null, 2),
   });
-}
-
-/** Recursively deletes a file_nodes subtree (and its storage bytes), root inclusive. */
-async function deleteFileSubtree(projectId: string, rootId: string) {
-  const allNodes = await filesRepository.listByProject(projectId);
-  const childrenByParent = new Map<string, typeof allNodes>();
-  for (const node of allNodes) {
-    if (!node.parentId) continue;
-    if (!childrenByParent.has(node.parentId)) childrenByParent.set(node.parentId, []);
-    childrenByParent.get(node.parentId)!.push(node);
-  }
-
-  const toDelete: typeof allNodes = [];
-  const stack = [rootId];
-  while (stack.length > 0) {
-    const currentId = stack.pop()!;
-    const node = allNodes.find((n) => n.id === currentId);
-    if (node) toDelete.push(node);
-    for (const child of childrenByParent.get(currentId) ?? []) stack.push(child.id);
-  }
-
-  for (const node of toDelete) {
-    if (node.storageKey) await localStorage.delete(node.storageKey);
-    await filesRepository.remove(projectId, node.id);
-  }
 }
 
 export const devicesService = {
@@ -123,7 +79,7 @@ export const devicesService = {
     if (!device) throw new NotFoundError("Device not found");
 
     if (device.rootFileNodeId) {
-      await deleteFileSubtree(projectId, device.rootFileNodeId);
+      await removeSubtree(projectId, device.rootFileNodeId);
     }
     await devicesRepository.remove(projectId, deviceId);
   },

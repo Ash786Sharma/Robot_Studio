@@ -82,7 +82,7 @@ export const WorkspaceCanvas = () => {
         else editorContent = <MonacoEditorPlaceholder showChanges={showChanges[pane]} safetyProgram={file?.safety ?? false} fileName={file?.name} fileId={file?.id} statusId={file?.id ?? "editor"} />
         break
       case "flow":
-        editorContent = <RealReactFlowCanvas showChanges={showChanges[pane]} onCloseChanges={() => setShowChanges(pane, false)} device={file?.device} safetyProgram={file?.safety ?? false} fileName={file?.name} />
+        editorContent = <RealReactFlowCanvas showChanges={showChanges[pane]} onCloseChanges={() => setShowChanges(pane, false)} device={file?.device} safetyProgram={file?.safety ?? false} fileName={file?.name} fileId={file?.id} statusId={file?.id ?? "flow"} />
         break
       case "config":
         editorContent = <ConfigEditor fileName={file?.name} fileId={file?.id} deviceKind={file?.device} />

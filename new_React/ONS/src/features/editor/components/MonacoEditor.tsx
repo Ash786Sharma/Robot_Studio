@@ -1,10 +1,35 @@
-import Editor, { DiffEditor, type DiffOnMount, type OnMount } from '@monaco-editor/react'
+import Editor, { DiffEditor, loader, type DiffOnMount, type OnMount } from '@monaco-editor/react'
+import * as monaco from "monaco-editor"
+import EditorWorker from "monaco-editor/editor/editor.worker?worker"
+import JsonWorker from "monaco-editor/language/json/json.worker?worker"
+import CssWorker from "monaco-editor/language/css/css.worker?worker"
+import HtmlWorker from "monaco-editor/language/html/html.worker?worker"
+import TsWorker from "monaco-editor/language/typescript/ts.worker?worker"
 import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useThemeStore } from "@/core/store/themeStore"
 import { useWorkspaceStore } from "@/core/store/workspaceStore"
 import { useProjectStore } from "@/core/store/projectStore"
 import { filesApi } from "@/core/api/filesApi"
+
+// @monaco-editor/react defaults to fetching the whole editor (workers,
+// language services, several MB) from a jsdelivr CDN on first mount — this is
+// what actually made opening a file feel slow. Point it at the already-bundled
+// local `monaco-editor` package instead, so there's no network round-trip.
+loader.config({ monaco })
+
+// Standard Vite worker wiring for Monaco (without this, language services
+// silently fail to spin up their web workers and fall back/degrade).
+;(self as unknown as { MonacoEnvironment: monaco.Environment }).MonacoEnvironment = {
+  getWorker(_workerId, label) {
+    if (label === "json") return new JsonWorker()
+    if (label === "css" || label === "scss" || label === "less") return new CssWorker()
+    if (label === "html" || label === "handlebars" || label === "razor") return new HtmlWorker()
+    if (label === "typescript" || label === "javascript") return new TsWorker()
+    return new EditorWorker()
+  },
+}
+
 
 const applyIdeTheme = (
   monaco: Parameters<OnMount>[1],

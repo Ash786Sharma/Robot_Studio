@@ -10,18 +10,23 @@ export interface TreeNode {
     | "robot layer folder"
     | "kinematic link"
     | "kinematic joint"
-    | "visual model folder"
-    | "collision model folder"
-    | "simulation folder"
     | "plc folder"
     | "hmi folder"
     | "hardware config"
     | "software config"
     | "program folder"
     | "safety program folder"
+    | "robot program folder"
+    | "robot safety program folder"
+    | "plc program folder"
+    | "plc safety program folder"
     | "Screen folder"
     | "robot Safety program file"
     | "robot program file"
+    | "rprg"
+    | "rgprg"
+    | "rsprg"
+    | "rsgprg"
     | "ld"
     | "graph"
     | "scl"
@@ -32,5 +37,8 @@ export interface TreeNode {
   icon: string;
   kind?: "folder" | "file";
   fileType?: string | null;
+  /** Kinematic link nodes only: storage key of the associated visual/collision mesh, if any. */
+  visualMeshKey?: string | null;
+  collisionMeshKey?: string | null;
   children?: TreeNode[];
 }

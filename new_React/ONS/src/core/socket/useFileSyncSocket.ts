@@ -21,6 +21,8 @@ export function useFileSyncSocket(projectId: string | null) {
       socket.onmessage = () => {
         queryClient.invalidateQueries({ queryKey: ["file-tree", projectId] })
       }
+    }).catch((err) => {
+      if (!cancelled) console.warn("File sync socket unavailable:", err)
     })
 
     return () => {

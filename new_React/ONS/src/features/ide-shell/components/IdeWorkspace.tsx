@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import {
   ResizableHandle,
   ResizablePanel,
@@ -6,16 +6,19 @@ import {
 } from "@/components/ui/resizable"
 import { ScrollArea } from "@/components/ui/scroll-area" // ⚡ INTEGRATED: Standardised unstyled Base UI scroll wrapper
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { FolderX } from "lucide-react"
 import { FileTreeItem, type DraftNode } from "@/features/ide-shell/file-tree/FileTreeItem"
 import { mapFileNodeToTreeNode } from "@/features/ide-shell/file-tree/fileNodeMapper"
 import { filesApi } from "@/core/api/filesApi"
 import { projectsApi } from "@/core/api/projectsApi"
+import { ApiError } from "@/core/api/httpClient"
 import { cn } from "@/lib/utils"
 import { WorkspaceCanvas } from "./WorkspaceCanvas";
 import { SourceControlPanel } from "./SourceControlPanel";
 import { useLayoutStore } from "@/core/store/layoutStore";
 import { useWorkspaceStore, type WorkspaceFile } from "@/core/store/workspaceStore";
 import { useProjectStore } from "@/core/store/projectStore";
+import { useIdeStore } from "@/core/store/ideStore";
 import { useFileSyncSocket } from "@/core/socket/useFileSyncSocket";
 import { TerminalView } from "@/features/console/components/TerminalView";
 import type { MenuItemData } from "@/features/ide-shell/components/IdeMenuItem";
@@ -32,7 +35,17 @@ export const IdeWorkspace = () => {
   const openFile = useWorkspaceStore((state) => state.openFile);
   const activeProjectId = useProjectStore((state) => state.activeProjectId);
   const setActiveProjectId = useProjectStore((state) => state.setActiveProjectId);
+  const closeActiveProject = useProjectStore((state) => state.closeActiveProject);
+  const openAddDeviceModal = useIdeStore((state) => state.openAddDeviceModal);
+  const createNewProject = useIdeStore((state) => state.createNewProject);
+  const openCreateRobotModal = useIdeStore((state) => state.openCreateRobotModal);
   const queryClient = useQueryClient();
+
+  const { data: allProjects } = useQuery({
+    queryKey: ["projects", "all"],
+    queryFn: projectsApi.list,
+    enabled: !activeProjectId,
+  });
 
   useFileSyncSocket(activeProjectId);
 
@@ -40,20 +53,37 @@ export const IdeWorkspace = () => {
     queryKey: ["file-tree", activeProjectId],
     queryFn: () => filesApi.getTree(activeProjectId!),
     enabled: Boolean(activeProjectId),
+    retry: false,
   });
+
+  const { data: activeProject, error: activeProjectError } = useQuery({
+    queryKey: ["project", activeProjectId],
+    queryFn: () => projectsApi.get(activeProjectId!),
+    enabled: Boolean(activeProjectId),
+    retry: false,
+  });
+
+  // Project was deleted (e.g. directly in the DB, or from another tab) —
+  // fall back to the "no project open" placeholder instead of showing a
+  // stale/broken tree forever.
+  useEffect(() => {
+    if (activeProjectError instanceof ApiError && activeProjectError.status === 404) {
+      closeActiveProject();
+    }
+  }, [activeProjectError, closeActiveProject]);
 
   const treeNodes = useMemo(() => {
     if (!activeProjectId) return [];
 
     return [{
       id: activeProjectId,
-      name: "Project Workspace",
+      name: activeProject?.name ?? "Project Workspace",
       type: "Project workspace",
       icon: "FolderOpen",
       kind: "folder",
       children: (fileTree ?? []).map(mapFileNodeToTreeNode),
     } satisfies TreeNode];
-  }, [activeProjectId, fileTree]);
+  }, [activeProjectId, activeProject, fileTree]);
 
   const refreshFileTree = async () => {
     await queryClient.invalidateQueries({ queryKey: ["file-tree", activeProjectId] });
@@ -64,9 +94,22 @@ export const IdeWorkspace = () => {
   const handleFileTreeAction = async (item: MenuItemData, node: TreeNode) => {
     if (!activeProjectId) return;
 
-    if (["new-folder", "add-device", "add-config"].includes(item.id)) {
-      const placeholder = item.id === "add-device" ? "New Device" : item.id === "add-config" ? "New Configuration" : "New Folder";
-      setDraftNode({ parentId: node.id, kind: "folder", icon: "FolderPlus", placeholder });
+    if (item.id === "add-device") {
+      openAddDeviceModal();
+      return;
+    }
+
+    if (item.id === "close-project") {
+      closeActiveProject();
+      return;
+    }
+
+    if (["new-folder", "add-config"].includes(item.id)) {
+      const placeholder = item.id === "add-config" ? "New Configuration" : "New Folder";
+      // Propagate "program folder" so a subfolder created inside Programs/Safety
+      // Programs keeps getting the same menu as its parent, at any depth.
+      const fileType = item.id === "new-folder" && node.fileType === "program folder" ? "program folder" : undefined;
+      setDraftNode({ parentId: node.id, kind: "folder", fileType, icon: "FolderPlus", placeholder });
       return;
     }
 
@@ -96,17 +139,24 @@ export const IdeWorkspace = () => {
     }
 
     if (item.id === "delete-project") {
-      if (!window.confirm(`Delete project "${node.name}" and all its files?`)) return;
-      await projectsApi.remove(activeProjectId);
-      setActiveProjectId(null);
-      await queryClient.invalidateQueries({ queryKey: ["projects", "bootstrap"] });
+      // Deferred: window.confirm() is a blocking native dialog — firing it
+      // synchronously inside the menu item's click handler races the
+      // dropdown's own close/unmount, which can crash the whole React tree.
+      setTimeout(async () => {
+        if (!window.confirm(`Delete project "${node.name}" and all its files?`)) return;
+        await projectsApi.remove(activeProjectId);
+        closeActiveProject();
+        await queryClient.invalidateQueries({ queryKey: ["projects", "all"] });
+      }, 0);
       return;
     }
 
     if (["delete-item", "delete-config", "remove-device"].includes(item.id)) {
-      if (!window.confirm(`Delete "${node.name}"?`)) return;
-      await filesApi.remove(activeProjectId, node.id);
-      await refreshFileTree();
+      setTimeout(async () => {
+        if (!window.confirm(`Delete "${node.name}"?`)) return;
+        await filesApi.remove(activeProjectId, node.id);
+        await refreshFileTree();
+      }, 0);
     }
   };
 
@@ -149,6 +199,48 @@ export const IdeWorkspace = () => {
   };
 
   const isBottomPanelOpen = isTerminalOpen || activeView === "Problems";
+
+  if (!activeProjectId) {
+    return (
+      <main className="flex-1 h-full min-w-0 bg-[var(--background)] text-[var(--foreground)] select-none">
+        <div className="h-full w-full overflow-hidden p-0.5 bg-[var(--ide-panel-bg)] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 rounded-lg border border-[var(--border)] bg-[var(--ide-surface-bg)] px-10 py-12 text-center max-w-sm">
+            <FolderX className="h-8 w-8 text-[var(--ide-text-inactive)]" />
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold">No project open</p>
+              <p className="text-xs text-[var(--ide-text-inactive)]">Create a new project or open an existing one to get started.</p>
+            </div>
+            <button
+              onClick={createNewProject}
+              className="rounded-md bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-[var(--primary-foreground)] hover:opacity-90 transition-opacity"
+            >
+              New Project
+            </button>
+            <button
+              onClick={openCreateRobotModal}
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--ide-item-hover)] transition-colors"
+            >
+              Create Robot Library
+            </button>
+            {allProjects && allProjects.length > 0 && (
+              <div className="flex flex-col gap-1 w-full mt-2">
+                <span className="text-[10px] uppercase tracking-widest text-[var(--ide-text-inactive)]">Open existing</span>
+                {allProjects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => setActiveProjectId(project.id)}
+                    className="rounded-md border border-[var(--border)] px-3 py-1.5 text-xs text-left hover:bg-[var(--ide-item-hover)] transition-colors truncate"
+                  >
+                    {project.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 h-full min-w-0 bg-[var(--background)] text-[var(--foreground)] select-none">

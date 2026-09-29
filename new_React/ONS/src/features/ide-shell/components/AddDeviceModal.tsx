@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useIdeStore } from "@/core/store/ideStore"
 import { useProjectStore } from "@/core/store/projectStore"
-import { projectsApi } from "@/core/api/projectsApi"
 import { devicesApi, type DeviceKind } from "@/core/api/devicesApi"
 import { robotLibraryApi } from "@/core/api/robotLibraryApi"
 
@@ -20,15 +19,18 @@ const DEVICE_OPTIONS: { kind: DeviceKind; label: string; icon: typeof Bot; defau
   { kind: "hmi", label: "HMI", icon: MonitorSmartphone, defaultName: "HMI 1" },
 ]
 
-export const NewProjectModal = () => {
-  const isOpen = useIdeStore((state) => state.isNewProjectModalOpen)
-  const close = useIdeStore((state) => state.closeNewProjectModal)
-  const setActiveProjectId = useProjectStore((state) => state.setActiveProjectId)
+// Adds a single device to the already-active project (unlike NewProjectModal,
+// which creates a project + devices together). The backend rejects a second
+// device of a kind the project already has, so kinds already present are
+// disabled here rather than left to fail after submit.
+export const AddDeviceModal = () => {
+  const isOpen = useIdeStore((state) => state.isAddDeviceModalOpen)
+  const close = useIdeStore((state) => state.closeAddDeviceModal)
+  const activeProjectId = useProjectStore((state) => state.activeProjectId)
   const queryClient = useQueryClient()
 
-  const [projectName, setProjectName] = useState("")
-  const [selectedKinds, setSelectedKinds] = useState<Set<DeviceKind>>(new Set())
-  const [deviceNames, setDeviceNames] = useState<Record<DeviceKind, string>>({ robot: "", plc: "", hmi: "" })
+  const [kind, setKind] = useState<DeviceKind | null>(null)
+  const [deviceName, setDeviceName] = useState("")
   const [robotSource, setRobotSource] = useState<RobotSource>("upload")
   const [urdfFile, setUrdfFile] = useState<File | null>(null)
   const [meshFiles, setMeshFiles] = useState<File[]>([])
@@ -38,25 +40,22 @@ export const NewProjectModal = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const { data: existingDevices } = useQuery({
+    queryKey: ["devices", activeProjectId],
+    queryFn: () => devicesApi.list(activeProjectId!),
+    enabled: isOpen && Boolean(activeProjectId),
+  })
+  const takenKinds = new Set((existingDevices ?? []).map((d) => d.kind))
+
   const { data: libraryEntries } = useQuery({
     queryKey: ["robot-library"],
     queryFn: robotLibraryApi.list,
-    enabled: isOpen && selectedKinds.has("robot") && robotSource === "library",
+    enabled: isOpen && kind === "robot" && robotSource === "library",
   })
 
-  const toggleKind = (kind: DeviceKind) => {
-    setSelectedKinds((prev) => {
-      const next = new Set(prev)
-      if (next.has(kind)) next.delete(kind)
-      else next.add(kind)
-      return next
-    })
-  }
-
   const reset = () => {
-    setProjectName("")
-    setSelectedKinds(new Set())
-    setDeviceNames({ robot: "", plc: "", hmi: "" })
+    setKind(null)
+    setDeviceName("")
     setRobotSource("upload")
     setUrdfFile(null)
     setMeshFiles([])
@@ -74,45 +73,33 @@ export const NewProjectModal = () => {
   }
 
   const canSubmit =
-    projectName.trim().length > 0 &&
-    selectedKinds.size > 0 &&
+    Boolean(kind) &&
+    deviceName.trim().length > 0 &&
     !isSubmitting &&
-    [...selectedKinds].every((kind) => deviceNames[kind].trim().length > 0) &&
-    (!selectedKinds.has("robot") ||
+    (kind !== "robot" ||
       (robotSource === "library" ? libraryEntryId.length > 0 : Boolean(ordFile) || Boolean(urdfFile)))
 
   const handleSubmit = async () => {
+    if (!activeProjectId || !kind) return
     setIsSubmitting(true)
     setError(null)
     try {
-      const selectedLibraryEntry = libraryEntries?.find((entry) => entry.id === libraryEntryId)
-      const robotModel = selectedKinds.has("robot")
-        ? (robotSource === "library" ? selectedLibraryEntry?.name : deviceNames.robot.trim())
-        : undefined
-      const project = await projectsApi.create({ name: projectName.trim(), robotModel })
+      await devicesApi.create(activeProjectId, {
+        kind,
+        name: deviceName.trim(),
+        libraryEntryId: kind === "robot" && robotSource === "library" ? libraryEntryId : undefined,
+        ordFile: kind === "robot" && robotSource === "upload" ? (ordFile ?? undefined) : undefined,
+        urdfFile: kind === "robot" && robotSource === "upload" ? (urdfFile ?? undefined) : undefined,
+        meshFiles: kind === "robot" && robotSource === "upload" ? meshFiles : undefined,
+        collisionMeshFiles: kind === "robot" && robotSource === "upload" ? collisionMeshFiles : undefined,
+      })
 
-      for (const kind of selectedKinds) {
-        if (kind === "robot") {
-          await devicesApi.create(project.id, {
-            kind,
-            name: deviceNames.robot.trim(),
-            libraryEntryId: robotSource === "library" ? libraryEntryId : undefined,
-            ordFile: robotSource === "upload" ? (ordFile ?? undefined) : undefined,
-            urdfFile: robotSource === "upload" ? (urdfFile ?? undefined) : undefined,
-            meshFiles: robotSource === "upload" ? meshFiles : undefined,
-            collisionMeshFiles: robotSource === "upload" ? collisionMeshFiles : undefined,
-          })
-        } else {
-          await devicesApi.create(project.id, { kind, name: deviceNames[kind].trim() })
-        }
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ["projects", "all"] })
-      setActiveProjectId(project.id)
+      await queryClient.invalidateQueries({ queryKey: ["file-tree", activeProjectId] })
+      await queryClient.invalidateQueries({ queryKey: ["devices", activeProjectId] })
       close()
       reset()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create project")
+      setError(err instanceof Error ? err.message : "Failed to add device")
     } finally {
       setIsSubmitting(false)
     }
@@ -122,61 +109,53 @@ export const NewProjectModal = () => {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>New Project</DialogTitle>
-          <DialogDescription>Name your project and add the devices you want to work with.</DialogDescription>
+          <DialogTitle>Add Device</DialogTitle>
+          <DialogDescription>Add a robot, PLC, or HMI device to this project.</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="new-project-name">Project name</Label>
-            <Input
-              id="new-project-name"
-              autoFocus
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              placeholder="My Robot Cell"
-            />
-          </div>
-
           <div className="flex flex-col gap-2">
-            <Label>Devices</Label>
+            <Label>Device type</Label>
             <div className="grid grid-cols-3 gap-2">
-              {DEVICE_OPTIONS.map(({ kind, label, icon: Icon, defaultName }) => {
-                const selected = selectedKinds.has(kind)
+              {DEVICE_OPTIONS.map(({ kind: optionKind, label, icon: Icon, defaultName }) => {
+                const selected = kind === optionKind
+                const disabled = takenKinds.has(optionKind)
                 return (
                   <button
-                    key={kind}
+                    key={optionKind}
                     type="button"
+                    disabled={disabled}
                     onClick={() => {
-                      toggleKind(kind)
-                      if (!selected && !deviceNames[kind]) {
-                        setDeviceNames((prev) => ({ ...prev, [kind]: defaultName }))
-                      }
+                      setKind(optionKind)
+                      if (!deviceName) setDeviceName(defaultName)
                     }}
                     className={cn(
                       "flex flex-col items-center gap-1.5 rounded-lg border px-3 py-3 text-xs font-medium transition-colors",
-                      selected
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10",
+                      disabled
+                        ? "cursor-not-allowed border-white/5 bg-white/5 text-muted-foreground/40"
+                        : selected
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10",
                     )}
                   >
                     <Icon className="h-5 w-5" />
                     {label}
+                    {disabled && <span className="text-[10px] opacity-70">Already added</span>}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          {[...selectedKinds].map((kind) => (
-            <div key={kind} className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 p-3">
+          {kind && (
+            <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 p-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor={`device-name-${kind}`}>{DEVICE_OPTIONS.find((o) => o.kind === kind)!.label} name</Label>
+                <Label htmlFor="add-device-name">{DEVICE_OPTIONS.find((o) => o.kind === kind)!.label} name</Label>
                 <Input
-                  id={`device-name-${kind}`}
-                  value={deviceNames[kind]}
+                  id="add-device-name"
+                  value={deviceName}
                   readOnly={kind === "robot" && robotSource === "library"}
-                  onChange={(e) => setDeviceNames((prev) => ({ ...prev, [kind]: e.target.value }))}
+                  onChange={(e) => setDeviceName(e.target.value)}
                 />
               </div>
 
@@ -242,7 +221,7 @@ export const NewProjectModal = () => {
                         const entryId = e.target.value
                         setLibraryEntryId(entryId)
                         const entry = libraryEntries?.find((candidate) => candidate.id === entryId)
-                        if (entry) setDeviceNames((prev) => ({ ...prev, robot: entry.name }))
+                        if (entry) setDeviceName(entry.name)
                       }}
                     >
                       <option value="">Select a robot…</option>
@@ -256,7 +235,7 @@ export const NewProjectModal = () => {
                 </div>
               )}
             </div>
-          ))}
+          )}
 
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
@@ -267,7 +246,7 @@ export const NewProjectModal = () => {
           </Button>
           <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
             {isSubmitting && <Loader2 className="animate-spin" />}
-            Create
+            Add
           </Button>
         </DialogFooter>
       </DialogContent>

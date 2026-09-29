@@ -5,6 +5,9 @@ import {IdeNavRail} from "./IdeNavRail"
 import {IdeWorkspace} from "./IdeWorkspace"
 import {IdeFooter} from "./IdeFooter"
 import { NewProjectModal } from "./NewProjectModal"
+import { AddDeviceModal } from "./AddDeviceModal"
+import { CreateRobotLibraryModal } from "./CreateRobotLibraryModal"
+import { OpenProjectModal } from "./OpenProjectModal"
 
 
 export const IdeLayout = () => {
@@ -24,6 +27,9 @@ export const IdeLayout = () => {
       </div>
       <IdeFooter />
       <NewProjectModal />
+      <AddDeviceModal />
+      <CreateRobotLibraryModal />
+      <OpenProjectModal />
     </div>
   )
 }
