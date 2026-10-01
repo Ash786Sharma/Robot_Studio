@@ -64,7 +64,7 @@ export const WorkspaceCanvas = () => {
     view:
       file.type === "hardware config" || file.type === "software config"
         ? "config"
-        : file.type === "db" || ["rprg", "rsprg", "scl"].some((extension) => file.name.toLowerCase().endsWith(`.${extension}`)) || file.type === "hmi ui"
+        : ["db", "scl", "rprg", "rsprg"].includes(file.type) || file.type === "hmi ui"
           ? "editor"
           : "flow",
   }))

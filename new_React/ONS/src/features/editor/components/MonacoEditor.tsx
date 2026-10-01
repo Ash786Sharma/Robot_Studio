@@ -147,8 +147,8 @@ export const MonacoEditorPlaceholder = ({ showChanges = false, safetyProgram = f
   }, [currentTheme])
 
   return (
-    <div className={`relative w-full h-full overflow-hidden ${safetyProgram ? "border-t-2 border-red-500/70" : ""}`}>
-      {safetyProgram && <div className="absolute right-3 top-2 z-10 rounded border border-red-400/50 bg-red-950/70 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-red-200">Safety Program{fileName ? ` · ${fileName}` : ""}</div>}
+    <div className={`relative w-full h-full overflow-hidden ${safetyProgram ? "border-t-2 border-destructive/70" : ""}`}>
+      {safetyProgram && <div className="absolute right-3 top-2 z-10 rounded border border-destructive/50 bg-destructive/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-destructive">Safety Program{fileName ? ` · ${fileName}` : ""}</div>}
       {showChanges ? (
         <DiffEditor
           height="100%"

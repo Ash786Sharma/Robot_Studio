@@ -30,6 +30,34 @@ export interface MenuGroupData {
   items: MenuItemData[];
 }
 
+// Keeps relative order within each bucket, just moves danger items after everything else.
+const sortDangerLast = (items: MenuItemData[]): MenuItemData[] => {
+  const nonDanger = items.filter((item) => item.variant !== "danger")
+  const danger = items.filter((item) => item.variant === "danger")
+  return danger.length > 0 ? [...nonDanger, ...danger] : items
+}
+
+// Pulls danger items out of every group into one trailing group, so a danger action
+// authored in an earlier group never renders above a non-danger action from a later one.
+const reorderGroupsDangerLast = (groups: MenuGroupData[]): MenuGroupData[] => {
+  const dangerItems: MenuItemData[] = []
+  const cleaned = groups
+    .map((group) => {
+      const keep = group.items.filter((item) => {
+        if (item.variant === "danger") {
+          dangerItems.push(item)
+          return false
+        }
+        return true
+      })
+      return { ...group, items: keep }
+    })
+    .filter((group) => group.items.length > 0)
+
+  if (dangerItems.length === 0) return groups
+  return [...cleaned, { groupId: "__danger-actions__", hasSeparatorBefore: cleaned.length > 0, items: dangerItems }]
+}
+
 interface IdeMenuItemProps {
   menuButton?: React.ReactElement 
   config?: MenuGroupData[] | MenuItemData[] 
@@ -81,7 +109,7 @@ export const IdeMenuItem = ({
     const isDanger = item.variant === "danger"
     
     const itemStyles = isDanger
-      ? "flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-red-400 data-[highlighted]:bg-red-950/30 data-[highlighted]:text-red-400"
+      ? "flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-destructive data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive"
       : "flex items-center gap-2 cursor-pointer font-medium text-xs rounded-md px-2.5 py-2 outline-none transition-colors duration-150 text-[var(--ide-text-inactive)] data-[highlighted]:bg-[var(--ide-item-hover)] data-[highlighted]:text-[var(--foreground)]"
 
     const nodes: React.ReactNode[] = []
@@ -169,7 +197,7 @@ export const IdeMenuItem = ({
           style={{ '--tw-shadow-color': 'var(--ide-tooltip-shadow)' } as React.CSSProperties}
         >
           {isGrouped ? (
-            (config as MenuGroupData[]).map((group) => (
+            reorderGroupsDangerLast(config as MenuGroupData[]).map((group) => (
               <React.Fragment key={group.groupId}>
                 {group.hasSeparatorBefore && (
                   <DropdownMenuSeparator className="my-1.5 mx-1" />
@@ -181,7 +209,7 @@ export const IdeMenuItem = ({
             ))
           ) : (
             <DropdownMenuGroup className="flex flex-col gap-0.5">
-              {(config as MenuItemData[]).map((item) => renderMenuNode(item))}
+              {sortDangerLast(config as MenuItemData[]).map((item) => renderMenuNode(item))}
             </DropdownMenuGroup>
           )}
         </DropdownMenuContent>
@@ -189,7 +217,7 @@ export const IdeMenuItem = ({
     )
   }
 
-  const recursiveItems = items || []
+  const recursiveItems = sortDangerLast(items || [])
   return <>{recursiveItems.map((item) => renderMenuNode(item))}</>
 }
 

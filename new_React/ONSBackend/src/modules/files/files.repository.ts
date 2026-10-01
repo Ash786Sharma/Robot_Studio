@@ -33,4 +33,9 @@ export const filesRepository = {
   async remove(projectId: string, fileId: string) {
     await db.delete(fileNodes).where(and(eq(fileNodes.projectId, projectId), eq(fileNodes.id, fileId)));
   },
+
+  /** Wipes every file_nodes row for a project (rows only — callers must free any blob storage first). */
+  async removeAllForProject(projectId: string) {
+    await db.delete(fileNodes).where(eq(fileNodes.projectId, projectId));
+  },
 };

@@ -57,7 +57,7 @@ export const LoginScreen = () => {
           />
         </label>
 
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {error && <p className="text-xs text-destructive">{error}</p>}
 
         <Button type="submit" disabled={isAuthenticating}>
           {isAuthenticating ? "Please wait…" : mode === "login" ? "Sign in" : "Sign up"}

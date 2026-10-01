@@ -11,6 +11,7 @@ import { projectsRoutes } from "./modules/projects/projects.routes.js";
 import { filesRoutes } from "./modules/files/files.routes.js";
 import { devicesRoutes } from "./modules/devices/devices.routes.js";
 import { robotLibraryRoutes } from "./modules/robots/robotLibrary.routes.js";
+import { gitRoutes } from "./modules/git/git.routes.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 // In dev, the frontend can be reached via localhost on any port (Vite falls back
@@ -52,6 +53,7 @@ export function createApp() {
   app.use("/api/auth", authRoutes);
   app.use("/api/projects/:projectId/files", filesRoutes);
   app.use("/api/projects/:projectId/devices", devicesRoutes);
+  app.use("/api/projects/:projectId/git", gitRoutes);
   app.use("/api/robot-library", robotLibraryRoutes);
   app.use("/api/projects", projectsRoutes);
 

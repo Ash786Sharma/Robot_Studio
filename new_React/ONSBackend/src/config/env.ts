@@ -8,6 +8,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 characters"),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
   STORAGE_ROOT: z.string().default("./storage"),
+  GIT_WORKDIR_ROOT: z.string().default("./git-workdir"),
 });
 
 export const env = envSchema.parse(process.env);

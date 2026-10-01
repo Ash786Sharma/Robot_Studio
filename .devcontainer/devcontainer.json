@@ -1,0 +1,15 @@
+{
+  "name": "Robot Studio",
+  "image": "mcr.microsoft.com/devcontainers/universal:latest",
+  "forwardPorts": [3000, 5174],
+  "portsAttributes": {
+    "3000": {
+      "label": "ONS Backend (API + WebSockets)",
+      "visibility": "private"
+    },
+    "5174": {
+      "label": "ONS Frontend (Vite)",
+      "visibility": "private"
+    }
+  }
+}

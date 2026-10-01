@@ -17,3 +17,7 @@ export const createDeviceSchema = z.object({
 
 export type CreateDeviceInput = z.infer<typeof createDeviceSchema>;
 export type DeviceKind = z.infer<typeof deviceKindSchema>;
+
+export const ordMeshQuerySchema = z.object({
+  key: z.string().min(1).max(500),
+});

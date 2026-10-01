@@ -75,15 +75,15 @@
                 "iconName": "ShieldAlert",
                 "children": [
                   {
+                    "id": "git-prune",
+                    "text": "Prune Remote Tracking References",
+                    "iconName": "Flame"
+                  },
+                  {
                     "id": "git-hard-reset",
                     "text": "Hard Reset to HEAD",
                     "iconName": "XCircle",
                     "variant": "danger"
-                  },
-                  {
-                    "id": "git-prune",
-                    "text": "Prune Remote Tracking References",
-                    "iconName": "Flame"
                   }
                 ]
               }

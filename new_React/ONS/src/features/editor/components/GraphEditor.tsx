@@ -136,9 +136,9 @@ export const RealReactFlowCanvas = ({ showChanges = false, onCloseChanges, devic
     setEdges((currentEdges) => addEdge({ ...connection, animated: true }, currentEdges))
   }
   return (
-    <div data-theme={currentTheme} className={`w-full h-full relative overflow-hidden ${safetyProgram ? "ring-1 ring-inset ring-red-500/60" : ""}`} style={{ backgroundColor: surfaceColor }} onDrop={handleDrop} onDragOver={(event) => event.preventDefault()}>
+    <div data-theme={currentTheme} className={`w-full h-full relative overflow-hidden ${safetyProgram ? "ring-1 ring-inset ring-destructive/60" : ""}`} style={{ backgroundColor: surfaceColor }} onDrop={handleDrop} onDragOver={(event) => event.preventDefault()}>
       <div className="absolute left-3 top-3 z-20 flex max-h-[calc(100%-24px)] w-36 flex-col gap-1 overflow-auto rounded-xl border border-white/10 bg-black/25 p-2 shadow-xl backdrop-blur-md">
-        <div className={`px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide ${safetyProgram ? "text-red-300" : "text-[var(--ide-text-inactive)]"}`}>{safetyProgram ? "Safety Logic" : device === "robot" ? "Robot Blocks" : "PLC Blocks"}</div>
+        <div className={`px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide ${safetyProgram ? "text-destructive" : "text-[var(--ide-text-inactive)]"}`}>{safetyProgram ? "Safety Logic" : device === "robot" ? "Robot Blocks" : "PLC Blocks"}</div>
         {blocks.map((block) => (
           <div key={block} draggable onDragStart={(event) => event.dataTransfer.setData("application/x-ons-block", block)} className="cursor-grab rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-[11px] text-[var(--foreground)] hover:bg-white/10 active:cursor-grabbing">{block}</div>
         ))}

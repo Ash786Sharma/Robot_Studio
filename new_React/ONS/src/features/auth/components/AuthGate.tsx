@@ -59,7 +59,7 @@ export const AuthGate = ({ children }: { children: ReactNode }) => {
       return (
         <div className="flex h-screen w-screen flex-col items-center justify-center gap-2 bg-[var(--background)] px-6 text-center text-sm text-[var(--foreground)]">
           <p>Couldn&apos;t load your workspace.</p>
-          <p className="text-xs text-red-400">
+          <p className="text-xs text-destructive">
             {bootstrapQuery.error instanceof Error ? bootstrapQuery.error.message : "Unknown error"}
           </p>
         </div>

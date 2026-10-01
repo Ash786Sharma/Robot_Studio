@@ -35,3 +35,19 @@ export async function deleteDevice(req: Request, res: Response) {
   await devicesService.remove(param(req, "projectId"), param(req, "deviceId"));
   res.status(204).send();
 }
+
+export async function getOrd(req: Request, res: Response) {
+  const ord = await devicesService.getOrdDocument(param(req, "projectId"), param(req, "deviceId"));
+  res.json(ord);
+}
+
+export async function updateOrd(req: Request, res: Response) {
+  const ord = await devicesService.updateOrdDocument(param(req, "projectId"), param(req, "deviceId"), req.body);
+  res.json(ord);
+}
+
+export async function getOrdMesh(req: Request, res: Response) {
+  const buffer = await devicesService.readMeshBuffer(param(req, "projectId"), String(req.query.key));
+  res.set("Content-Type", "application/octet-stream");
+  res.send(buffer);
+}

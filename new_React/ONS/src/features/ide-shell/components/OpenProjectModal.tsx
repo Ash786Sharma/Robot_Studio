@@ -46,7 +46,7 @@ export const OpenProjectModal = () => {
               type="button"
               onClick={() => handleOpen(project.id)}
               disabled={project.id === activeProjectId}
-              className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-left text-xs hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 rounded-md border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 px-3 py-2 text-left text-xs hover:bg-[var(--foreground)]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <FolderOpen className="h-4 w-4 shrink-0" />
               <span className="flex-1 truncate">{project.name}</span>

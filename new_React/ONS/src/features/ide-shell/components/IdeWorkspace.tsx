@@ -23,6 +23,9 @@ import { useFileSyncSocket } from "@/core/socket/useFileSyncSocket";
 import { TerminalView } from "@/features/console/components/TerminalView";
 import type { MenuItemData } from "@/features/ide-shell/components/IdeMenuItem";
 import type { TreeNode } from "@/features/ide-shell/file-tree/fileTree.types";
+import { useRobotSimulationStore } from "@/core/store/robotSimulationStore";
+
+const KINEMATIC_LINK_TYPES = new Set(["kinematic link", "kinematic root link", "kinematic tcp link"]);
 
 export const IdeWorkspace = () => {
   // Shared state controller to handle active selections across your IDE workbench canvas
@@ -33,6 +36,7 @@ export const IdeWorkspace = () => {
   const isExplorerOpen = useLayoutStore((state) => state.isExplorerOpen);
   const isTerminalOpen = useLayoutStore((state) => state.isTerminalOpen);
   const openFile = useWorkspaceStore((state) => state.openFile);
+  const setSelectedKinematicNode = useRobotSimulationStore((state) => state.setSelectedKinematicNode);
   const activeProjectId = useProjectStore((state) => state.activeProjectId);
   const setActiveProjectId = useProjectStore((state) => state.setActiveProjectId);
   const closeActiveProject = useProjectStore((state) => state.closeActiveProject);
@@ -106,15 +110,18 @@ export const IdeWorkspace = () => {
 
     if (["new-folder", "add-config"].includes(item.id)) {
       const placeholder = item.id === "add-config" ? "New Configuration" : "New Folder";
-      // Propagate "program folder" so a subfolder created inside Programs/Safety
-      // Programs keeps getting the same menu as its parent, at any depth.
-      const fileType = item.id === "new-folder" && node.fileType === "program folder" ? "program folder" : undefined;
+      // Propagate the parent's special folder type so a subfolder created inside
+      // Programs/Safety Programs or Screens keeps the same menu as its parent, at any depth.
+      const propagatedTypes = ["program folder", "Screen folder"];
+      const fileType = item.id === "new-folder" && propagatedTypes.includes(node.fileType ?? "") ? node.fileType ?? undefined : undefined;
       setDraftNode({ parentId: node.id, kind: "folder", fileType, icon: "FolderPlus", placeholder });
       return;
     }
 
     if (item.id === "new-file") {
-      setDraftNode({ parentId: node.id, kind: "file", fileType: "scl", icon: "FilePlus", placeholder: "New.scl" });
+      // "__generic__" is a sentinel the commit handler infers a real fileType from,
+      // distinct from the actual "scl" PLC block type below.
+      setDraftNode({ parentId: node.id, kind: "file", fileType: "__generic__", icon: "FilePlus", placeholder: "New.scl" });
       return;
     }
 
@@ -124,11 +131,22 @@ export const IdeWorkspace = () => {
       "new-rsprg": "rsprg",
       "new-rsgprg": "rsgprg",
       "add-screen": "hmi ui",
+      "new-plc-ob": "ld",
+      "new-plc-fc": "graph",
+      "new-plc-fb": "scl",
+      "new-plc-db": "db",
     };
 
     if (fileTypeByAction[item.id]) {
       const fileType = fileTypeByAction[item.id];
-      const placeholder = fileType === "hmi ui" ? "New Screen" : `New.${fileType}`;
+      const placeholderByFileType: Record<string, string> = {
+        "hmi ui": "New Screen",
+        ld: "New OB Block",
+        graph: "New FC Block",
+        scl: "New FB Block",
+        db: "New DB Block",
+      };
+      const placeholder = placeholderByFileType[fileType] ?? `New.${fileType}`;
       setDraftNode({ parentId: node.id, kind: "file", fileType, icon: "FilePlus", placeholder });
       return;
     }
@@ -151,7 +169,7 @@ export const IdeWorkspace = () => {
       return;
     }
 
-    if (["delete-item", "delete-config", "remove-device"].includes(item.id)) {
+    if (["delete-item", "remove-device"].includes(item.id)) {
       setTimeout(async () => {
         if (!window.confirm(`Delete "${node.name}"?`)) return;
         await filesApi.remove(activeProjectId, node.id);
@@ -175,7 +193,7 @@ export const IdeWorkspace = () => {
       if (pending.fileType && FIXED_EXTENSION_TYPES.has(pending.fileType) && !trimmed.includes(".")) {
         // Fixed-extension actions (new-rprg, ...) only ask for the base name.
         finalName = `${trimmed}.${pending.fileType}`;
-      } else if (pending.fileType === "scl") {
+      } else if (pending.fileType === "__generic__") {
         // Generic "new-file" action: infer the type from whatever the user typed.
         fileType = trimmed.includes(".") ? trimmed.split(".").pop()!.toLowerCase() : "scl";
       }
@@ -274,7 +292,12 @@ export const IdeWorkspace = () => {
                       key={rootNode.id} 
                       node={rootNode} 
                       activeNodeId={activeNodeId}
-                      onNodeSelect={(node) => setActiveNodeId(node.id)}
+                      onNodeSelect={(node) => {
+                        setActiveNodeId(node.id)
+                        if (KINEMATIC_LINK_TYPES.has(node.type)) setSelectedKinematicNode({ kind: "link", name: node.name })
+                        else if (node.type === "kinematic joint") setSelectedKinematicNode({ kind: "joint", name: node.name })
+                        else setSelectedKinematicNode(null)
+                      }}
                       onFileOpen={(file: WorkspaceFile) => openFile(file)}
                       onAction={handleFileTreeAction}
                       renamingNodeId={renamingNodeId}

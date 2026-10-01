@@ -85,8 +85,11 @@ export const DataBlockEditor = ({ fileName, showChanges, onShowChangesChange }: 
             onChange={(event) => updateField(row.original.id, "dataType", event.target.value)}
             className="h-6 rounded border border-transparent bg-transparent px-1 text-[11px] text-[var(--primary)] outline-none hover:border-[var(--border)] focus:border-[var(--primary)]"
           >
-            {dataTypeSuggestions.map((dataType) => <option key={dataType} value={dataType}>{dataType}</option>)}
-            <option value="Custom">Custom...</option>
+            {/* Explicit option colors so the native popup list follows the IDE theme instead of the OS default. */}
+            {dataTypeSuggestions.map((dataType) => (
+              <option key={dataType} value={dataType} style={{ backgroundColor: "var(--popover)", color: "var(--foreground)" }}>{dataType}</option>
+            ))}
+            <option value="Custom" style={{ backgroundColor: "var(--popover)", color: "var(--foreground)" }}>Custom...</option>
           </select>
           {!dataTypeSuggestions.includes(row.original.dataType) && (
             <Input

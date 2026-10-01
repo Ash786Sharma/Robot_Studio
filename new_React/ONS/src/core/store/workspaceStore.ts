@@ -87,7 +87,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
       showChanges: { ...state.showChanges, [pane]: show },
     })),
     openFile: (activeFile) => set((state) => {
-      const editorFile = activeFile.type === "db" || ["rprg", "rsprg", "scl"].some((extension) => activeFile.name.toLowerCase().endsWith(`.${extension}`)) || activeFile.type === "hmi ui"
+      const editorFile = ["db", "scl", "rprg", "rsprg"].includes(activeFile.type) || activeFile.type === "hmi ui"
       const isConfigFile = activeFile.type === "hardware config" || activeFile.type === "software config"
       const targetTab: ViewType = isConfigFile ? "config" : editorFile ? "editor" : "flow"
 
@@ -105,7 +105,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => {
     activateFile: (fileId, pane) => set((state) => {
       const file = state.openFiles.find((openFile) => openFile.id === fileId)
       if (!file) return state
-      const editorFile = file.type === "db" || ["rprg", "rsprg", "scl"].some((extension) => file.name.toLowerCase().endsWith(`.${extension}`)) || file.type === "hmi ui"
+      const editorFile = ["db", "scl", "rprg", "rsprg"].includes(file.type) || file.type === "hmi ui"
       const isConfigFile = file.type === "hardware config" || file.type === "software config"
       return {
         activeFile: file,

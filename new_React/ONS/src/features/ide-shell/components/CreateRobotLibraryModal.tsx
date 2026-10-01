@@ -100,7 +100,7 @@ export const CreateRobotLibraryModal = () => {
             />
           </div>
 
-          <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 p-3">
+          <div className="flex flex-col gap-2 rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3">
             <div className="flex gap-1.5">
               <Button type="button" size="sm" variant={source === "urdf" ? "default" : "outline"} onClick={() => setSource("urdf")}>
                 Upload URDF

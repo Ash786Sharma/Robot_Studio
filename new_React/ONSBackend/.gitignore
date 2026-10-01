@@ -30,6 +30,9 @@ coverage/
 # Local file storage (uploaded/created project files)
 storage/
 
+# Per-project real git mirrors used by the source control feature
+git-workdir/
+
 # TypeScript
 *.tsbuildinfo
 

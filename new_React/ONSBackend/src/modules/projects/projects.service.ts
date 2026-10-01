@@ -2,6 +2,7 @@ import { projectsRepository } from "./projects.repository.js";
 import { NotFoundError } from "../../errors/AppError.js";
 import type { CreateProjectInput } from "./projects.validators.js";
 import { localStorage } from "../../storageLib/localStorage.provider.js";
+import { removeMirror } from "../git/git.mirror.service.js";
 
 export const projectsService = {
   create(ownerId: string, input: CreateProjectInput) {
@@ -28,6 +29,7 @@ export const projectsService = {
     // project id, so deleting that whole prefix cleans up everything in one
     // shot — including anything an incomplete per-row cleanup missed.
     await localStorage.delete(project.id);
+    await removeMirror(project.id);
     await projectsRepository.remove(project.id);
   },
 };

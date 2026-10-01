@@ -35,6 +35,8 @@ interface FileTreeItemProps {
   deviceKind?: string;
   /** Inherited from the nearest ancestor "program folder" (Programs vs Safety Programs), so subfolders/files nested inside get the same menu as their parent instead of re-deriving it from their own name. */
   programCategory?: "standard" | "safety";
+  /** True once inside a "Screen folder" ancestor, so plain subfolders (whatever their own stored fileType) still get the Screens menu (Add Screen, etc). */
+  insideScreenFolder?: boolean;
 }
 
 const ROBOT_FILE_TYPES = ["robot Safety program file", "robot program file", "rprg", "rgprg", "rsprg", "rsgprg"]
@@ -74,6 +76,7 @@ export const FileTreeItem = ({
   onDraftCancel,
   deviceKind,
   programCategory,
+  insideScreenFolder,
 }: FileTreeItemProps) => {
   const [isOpen, setIsOpen] = useState(depth === 0)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -86,6 +89,7 @@ export const FileTreeItem = ({
     node.type === "program folder"
       ? (programCategory ?? (node.name.toLowerCase().includes("safety") ? "safety" : "standard"))
       : programCategory
+  const childInsideScreenFolder = node.type === "Screen folder" || insideScreenFolder
 
   // Auto-expand a folder that just received a new-file/new-folder draft row.
   useEffect(() => {
@@ -120,6 +124,8 @@ export const FileTreeItem = ({
           if (childDeviceKind === "robot folder") evaluatedType = isSafety ? "robot safety program folder" : "robot program folder";
           else if (childDeviceKind === "plc folder") evaluatedType = isSafety ? "plc safety program folder" : "plc program folder";
           else evaluatedType = isSafety ? "safety program folder" : "program folder";
+        } else if (node.type === "folder" && insideScreenFolder) {
+          evaluatedType = "Screen folder";
         }
 
         return allowedTypes.includes(evaluatedType) || (isNestedProgramFolder && allowedTypes.includes("program subfolder"))
@@ -237,6 +243,7 @@ export const FileTreeItem = ({
               onDraftCancel={onDraftCancel}
               deviceKind={childDeviceKind}
               programCategory={childProgramCategory}
+              insideScreenFolder={childInsideScreenFolder}
             />
           ))}
           {hasDraftHere && draftNode && (

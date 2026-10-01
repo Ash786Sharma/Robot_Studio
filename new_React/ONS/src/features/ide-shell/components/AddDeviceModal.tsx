@@ -132,10 +132,10 @@ export const AddDeviceModal = () => {
                     className={cn(
                       "flex flex-col items-center gap-1.5 rounded-lg border px-3 py-3 text-xs font-medium transition-colors",
                       disabled
-                        ? "cursor-not-allowed border-white/5 bg-white/5 text-muted-foreground/40"
+                        ? "cursor-not-allowed border-[var(--foreground)]/5 bg-[var(--foreground)]/5 text-muted-foreground/40"
                         : selected
                           ? "border-primary bg-primary/10 text-foreground"
-                          : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10",
+                          : "border-[var(--foreground)]/10 bg-[var(--foreground)]/5 text-muted-foreground hover:bg-[var(--foreground)]/10",
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -148,7 +148,7 @@ export const AddDeviceModal = () => {
           </div>
 
           {kind && (
-            <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-white/5 p-3">
+            <div className="flex flex-col gap-2 rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="add-device-name">{DEVICE_OPTIONS.find((o) => o.kind === kind)!.label} name</Label>
                 <Input

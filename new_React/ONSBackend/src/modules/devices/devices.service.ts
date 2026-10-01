@@ -1,9 +1,12 @@
 import { devicesRepository } from "./devices.repository.js";
 import { deviceScaffoldService } from "./deviceScaffold.service.js";
-import { removeSubtree } from "../files/files.service.js";
-import { ConflictError, NotFoundError } from "../../errors/AppError.js";
+import { removeSubtree, filesService } from "../files/files.service.js";
+import { filesRepository } from "../files/files.repository.js";
+import { localStorage } from "../../storageLib/localStorage.provider.js";
+import { ConflictError, NotFoundError, ValidationError } from "../../errors/AppError.js";
 import { resolveOrdFromUpload, type OrdUploadFiles } from "../robots/ordUpload.helper.js";
 import { robotLibraryService } from "../robots/robotLibrary.service.js";
+import { ordSchema, type OrdDocument } from "../robots/ord.schema.js";
 import type { CreateDeviceInput } from "./devices.validators.js";
 
 /**
@@ -82,5 +85,42 @@ export const devicesService = {
       await removeSubtree(projectId, device.rootFileNodeId);
     }
     await devicesRepository.remove(projectId, deviceId);
+  },
+
+  /** Locates the `.ord` file node directly under a robot device's root (see `attachRobotDescription`). */
+  async findOrdNode(projectId: string, deviceId: string) {
+    const device = await devicesRepository.findById(projectId, deviceId);
+    if (!device || device.kind !== "robot" || !device.rootFileNodeId) {
+      throw new NotFoundError("Robot device not found");
+    }
+    const nodes = await filesRepository.listByProject(projectId);
+    const ordNode = nodes.find((node) => node.parentId === device.rootFileNodeId && node.fileType === "ord");
+    if (!ordNode) throw new NotFoundError("This device has no .ord description yet");
+    return ordNode;
+  },
+
+  async getOrdDocument(projectId: string, deviceId: string): Promise<OrdDocument> {
+    const ordNode = await devicesService.findOrdNode(projectId, deviceId);
+    const content = await filesService.readContent(projectId, ordNode.id);
+    return ordSchema.parse(JSON.parse(content));
+  },
+
+  async updateOrdDocument(projectId: string, deviceId: string, ord: unknown): Promise<OrdDocument> {
+    const ordNode = await devicesService.findOrdNode(projectId, deviceId);
+    const parsed = ordSchema.parse(ord);
+    await filesService.writeContent(projectId, ordNode.id, JSON.stringify(parsed, null, 2));
+    return parsed;
+  },
+
+  /** Streams a mesh referenced by an .ord document — `storageKey` must belong to this project,
+   *  or be a robot-library asset (library entries are shared/cloned-by-reference across projects). */
+  async readMeshBuffer(projectId: string, storageKey: string): Promise<Buffer> {
+    const isOwnProjectKey = storageKey.startsWith(`${projectId}/`);
+    const isLibraryKey = storageKey.startsWith("robot-library/");
+    if (!isOwnProjectKey && !isLibraryKey) {
+      throw new ValidationError("Mesh key does not belong to this project");
+    }
+    if (!(await localStorage.exists(storageKey))) throw new NotFoundError("Mesh file not found");
+    return localStorage.read(storageKey);
   },
 };

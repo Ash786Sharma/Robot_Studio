@@ -3,13 +3,28 @@ import { useXTerm } from "react-xtermjs"
 import { FitAddon } from "@xterm/addon-fit"
 import { authApi } from "@/core/api/authApi"
 import { resolveWsUrl } from "@/core/api/resolveBackendUrl"
+import { useThemeStore } from "@/core/store/themeStore"
 
 const WS_URL = resolveWsUrl()
 
 type TerminalServerMessage = { type: "output"; data: string } | { type: "exit"; code: number | null }
 
+/** Reads the active IDE theme's CSS tokens so xterm's colors match it, same approach as Monaco's applyIdeTheme. */
+const getTerminalTheme = () => {
+  const styles = getComputedStyle(document.documentElement)
+  const get = (token: string) => styles.getPropertyValue(token).trim()
+  return {
+    background: get("--ide-surface-bg"),
+    foreground: get("--foreground"),
+    cursor: get("--primary"),
+    cursorAccent: get("--ide-surface-bg"),
+    selectionBackground: get("--ide-item-active"),
+  }
+}
+
 /** Wires an xterm.js instance to a real PTY-backed shell over `/ws/terminal`. */
 export function useTerminal(projectId: string | null) {
+  const currentTheme = useThemeStore((state) => state.currentTheme)
   const fitAddonRef = useRef(new FitAddon())
   // react-xtermjs recreates the whole Terminal instance whenever `options`/`addons`
   // change identity — new literals every render would tear it down in a loop.
@@ -18,13 +33,19 @@ export function useTerminal(projectId: string | null) {
     cursorBlink: true,
     convertEol: true,
     fontSize: 13,
-    theme: { background: "#09090b" },
+    theme: getTerminalTheme(),
   }), [])
   const { ref, instance } = useXTerm({
     addons,
     options,
   })
   const socketRef = useRef<WebSocket | null>(null)
+
+  // Live-update xterm's colors on theme switch without tearing down the instance/session.
+  useEffect(() => {
+    if (!instance) return
+    instance.options.theme = getTerminalTheme()
+  }, [instance, currentTheme])
 
   useEffect(() => {
     if (!instance || !projectId) return
