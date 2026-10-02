@@ -20,13 +20,11 @@ export async function parseOrdMesh(buffer: ArrayBuffer, fileType: OrdMeshFileTyp
       return new Mesh(geometry, new MeshStandardMaterial({ color: "#c7c7c7", roughness: 0.6, metalness: 0.2 }))
     }
     case "dae": {
-      const collada = colladaLoader.parse(textDecoder.decode(buffer), "")
+      // URDF/ROS meshes are Z-up, and our joint-chain math already works in that frame. Strip
+      // <up_axis> so ColladaLoader doesn't bake in (and warn about) a -90° X Y-up conversion.
+      const xml = textDecoder.decode(buffer).replace(/<up_axis>[^<]*<\/up_axis>/, "")
+      const collada = colladaLoader.parse(xml, "")
       if (!collada) throw new Error("ColladaLoader failed to parse the mesh")
-      // URDF/ROS meshes are Z-up; ColladaLoader detects that and "helpfully" bakes a -90° X
-      // rotation into the scene to convert to three.js's Y-up — but our own joint-chain math
-      // already composes everything in the URDF's native Z-up frame, so undo it here or every
-      // mesh ends up fighting its own kinematic transform (scattered/misoriented links).
-      collada.scene.rotation.set(0, 0, 0)
       return collada.scene
     }
     case "obj": {

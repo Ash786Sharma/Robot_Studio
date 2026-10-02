@@ -14,10 +14,10 @@ import { gitApi, type GitChangeDto } from "@/core/api/gitApi"
 import { ApiError } from "@/core/api/httpClient"
 
 const statusColors = {
-  M: "text-amber-400",
-  A: "text-emerald-400",
+  M: "text-status-warning",
+  A: "text-status-success",
   D: "text-destructive",
-  U: "text-sky-400",
+  U: "text-status-info",
 }
 
 function errorMessageOf(error: unknown, fallback: string): string {

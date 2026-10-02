@@ -34,6 +34,7 @@ interface RobotSimulationState extends RobotPose {
   showVisual: boolean
   showCollisionBody: boolean
   checkWorkspace: boolean
+  showTcpFrame: boolean
   collision: boolean
   /** The robot device's live .ord document — the single source of truth for links/joints/mass/inertia/limits. */
   loadedOrd: OrdDocument | null
@@ -54,6 +55,7 @@ interface RobotSimulationState extends RobotPose {
   setShowVisual: (show: boolean) => void
   setShowCollisionBody: (show: boolean) => void
   setCheckWorkspace: (show: boolean) => void
+  setShowTcpFrame: (show: boolean) => void
   setCollision: (collision: boolean) => void
 }
 
@@ -83,6 +85,7 @@ export const useRobotSimulationStore = create<RobotSimulationState>((set) => ({
   showVisual: true,
   showCollisionBody: false,
   checkWorkspace: false,
+  showTcpFrame: false,
   collision: false,
 
   setSelectedKinematicNode: (selectedKinematicNode) => set({ selectedKinematicNode }),
@@ -123,5 +126,6 @@ export const useRobotSimulationStore = create<RobotSimulationState>((set) => ({
   setShowVisual: (showVisual) => set({ showVisual }),
   setShowCollisionBody: (showCollisionBody) => set({ showCollisionBody }),
   setCheckWorkspace: (checkWorkspace) => set({ checkWorkspace }),
+  setShowTcpFrame: (showTcpFrame) => set({ showTcpFrame }),
   setCollision: (collision) => set({ collision }),
 }))

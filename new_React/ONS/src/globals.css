@@ -38,7 +38,6 @@
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
 
   /* Sidebar Design Token Mapping */
   --sidebar: oklch(0.985 0 0);
@@ -56,6 +55,10 @@
   --ide-text-inactive: var(--muted-foreground);
   --ide-item-hover: var(--border);
   --ide-item-active: var(--accent);
+  --status-success: #15803d;
+  --status-warning: #b45309;
+  --status-info: #0369a1;
+  --status-success-glow: color-mix(in srgb, var(--status-success) 60%, transparent);
 
   /* ⚡ STABLE LIGHT MODE UTILITY SUB-TOKENS */
   --ide-kbd-bg: oklch(0.95 0 0);
@@ -98,6 +101,10 @@
   --ide-text-inactive: var(--muted-foreground);
   --ide-item-hover: var(--accent);
   --ide-item-active: oklch(0.35 0 0);
+  --status-success: #4ade80;
+  --status-warning: #fbbf24;
+  --status-info: #38bdf8;
+  --status-success-glow: color-mix(in srgb, var(--status-success) 60%, transparent);
 
   /* ⚡ STABLE DARK MODE UTILITY SUB-TOKENS */
   --ide-kbd-bg: #222222;
@@ -244,6 +251,10 @@
   /* ⚡ FIXED HIGH CONTRAST ACTIVE STATES */
   --ide-item-hover: oklch(0.15 0 0);
   --ide-item-active: oklch(0.3 0 0);
+  --status-success: #00ff00;
+  --status-warning: #ffff00;
+  --status-info: #00ffff;
+  --status-success-glow: transparent;
 
   --ide-kbd-bg: oklch(0.1 0 0);
   --ide-kbd-border: oklch(1 0 0);
@@ -326,6 +337,64 @@
   --ide-kbd-bg: #fdf6e3;
   --ide-kbd-border: #93a1a1;
   --ide-tooltip-shadow: rgba(0, 0, 0, 0.1);
+  color-scheme: light;
+}
+
+/* Complete the shadcn palette from each selected IDE theme so shared controls never fall back to generic dark defaults. */
+:is(
+  .theme-vsc-dark,
+  .theme-onedark,
+  .theme-dracula,
+  .theme-catppuccin,
+  .theme-tokyonight,
+  .theme-high-contrast,
+  .theme-github-dark,
+  .theme-gruvbox,
+  .theme-solarized-light
+) {
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--accent);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--ide-panel-bg);
+  --muted-foreground: var(--ide-text-inactive);
+  --destructive: oklch(0.62 0.22 25);
+  --input: var(--border);
+  --ring: var(--primary);
+
+  --sidebar: var(--ide-panel-bg);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--primary);
+
+  --chart-1: var(--primary);
+  --chart-2: var(--accent);
+  --chart-3: var(--ide-text-inactive);
+  --chart-4: var(--foreground);
+  --chart-5: var(--border);
+
+  --ide-glass-bg: color-mix(in srgb, var(--ide-panel-bg) 82%, transparent);
+  --ide-glass-surface: color-mix(in srgb, var(--foreground) 5%, transparent);
+  --ide-glass-border: color-mix(in srgb, var(--foreground) 14%, transparent);
+  --ide-glass-hover: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --ide-glass-input: color-mix(in srgb, var(--ide-panel-bg) 58%, transparent);
+}
+
+:is(
+  .theme-vsc-dark,
+  .theme-onedark,
+  .theme-dracula,
+  .theme-catppuccin,
+  .theme-tokyonight,
+  .theme-high-contrast,
+  .theme-github-dark,
+  .theme-gruvbox
+) {
+  color-scheme: dark;
 }
 
 
@@ -371,6 +440,14 @@ body {
   --color-ide-kbd: var(--ide-kbd-bg);
   --color-ide-kbd-border: var(--ide-kbd-border);
   --color-ide-shadow: var(--ide-tooltip-shadow);
+  --color-ide-glass: var(--ide-glass-bg);
+  --color-ide-glass-surface: var(--ide-glass-surface);
+  --color-ide-glass-border: var(--ide-glass-border);
+  --color-ide-glass-hover: var(--ide-glass-hover);
+  --color-ide-glass-input: var(--ide-glass-input);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-info: var(--status-info);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);

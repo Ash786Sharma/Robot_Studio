@@ -1,27 +1,21 @@
 # Robot Studio
 
 One Automation Studio (ONS) is a robotics and industrial automation IDE. The
-active application consists of a React frontend, a Node.js backend, a
-PostgreSQL database, and a planned Linux/FPGA controller runtime.
+active application consists of a React frontend, a Node.js backend, PostgreSQL,
+and local project storage. A compiler and Linux/FPGA controller runtime are
+future work, not services in the current application.
 
 ## Architecture
 
-```text
-React + Vite frontend
-	|
-	| REST HTTP + raw WebSocket
-	v
-Node.js + Express backend
-	|
-	+-- PostgreSQL: users, projects, file-tree metadata, devices, robot library
-	+-- Local storage: project file contents, meshes, and derived .ord robot descriptions
-	+-- WebSocket: live project file synchronization, and a per-project PTY terminal
-	|
-	v
-Linux controller with FPGA
-	|
-	+-- C/C++ deterministic kinematics and control
-	+-- PLC, HMI, and robot program runtime
+```mermaid
+flowchart LR
+    FE["React + Vite IDE"] <-->|"REST / JWT"| API["Express API"]
+    FE <-->|"ticketed WebSockets"| WS["File sync + PTY terminal"]
+    API <--> DB[("PostgreSQL metadata")]
+    API <--> STORE[("Local project and robot files")]
+    WS --> PTY["node-pty per-project shell"]
+    PTY --> STORE
+    FE -. "future generated artifact" .-> CTRL["Planned Linux / FPGA runtime"]
 ```
 
 Python notebooks are used for research, testing, kinematics verification,
@@ -64,7 +58,8 @@ For a deeper dive into how the frontend, backend, and database fit together
 - Monaco Editor for text editing
 - React Flow for graph-based editors
 - React Konva for HMI design
-- React Three Fiber, Three.js, URDF Loader, and Rapier for 3D simulation
+- React Three Fiber and Three.js for the `.ord`-driven robot viewer
+- `three-mesh-bvh` for triangle-level collision detection; Rapier convex hulls for simplified whole-robot dynamics
 - `@xterm/xterm` (via `react-xtermjs`) for the in-IDE terminal
 - Native browser WebSocket API for live file synchronization and the terminal
 
@@ -76,6 +71,7 @@ For a deeper dive into how the frontend, backend, and database fit together
 - Zod request validation
 - JWT authentication
 - `ws` for raw WebSockets, `node-pty` for real per-project terminal shells
+- `simple-git` for project-scoped Git mirrors managed by the backend
 - `multer` for multipart uploads (robot description/mesh files), `fast-xml-parser` for URDF parsing
 - Pino logging, Helmet security headers, and rate limiting
 - Swagger UI/OpenAPI documentation
@@ -106,7 +102,8 @@ new_React/ONSBackend/
 │   │   ├── projects/                # Project CRUD
 │   │   ├── files/                   # File tree and content CRUD
 │   │   ├── devices/                 # Robot/PLC/HMI devices, folder scaffolding
-│   │   └── robots/                  # .ord schema, URDF import, robot library
+│   │   ├── robots/                  # .ord schema, URDF import, robot library
+│   │   └── git/                     # Project Git mirror and source-control operations
 │   ├── middlewares/                 # Auth, validation, errors
 │   ├── storage/                     # Local storage provider
 │   ├── ws/                          # File-sync and terminal WebSocket gateways
@@ -133,12 +130,22 @@ new_React/ONS/src/
 │   ├── console/                     # xterm.js terminal, backed by a real PTY shell
 │   ├── editor/                      # Monaco, graph, HMI, DB, and device config editors
 │   ├── ide-shell/                   # IDE layout, navigation, file tree, New Project modal
-│   ├── simulation/                  # 3D viewer and viewport
-│   └── workflow/
+│   └── simulation/                  # .ord robot viewer, reach estimate, collisions, Rapier preview
 ├── hooks/
 ├── lib/
 └── globals.css
 ```
+
+### Robot simulation scope
+
+The viewer builds a nested link/joint scene graph from the project's `.ord`
+document and loads visual and collision meshes separately. Joint sliders are
+kinematic targets paced by configured velocity limits. The reach envelope is
+a sampled convex hull of TCP positions: it is an estimate and can include
+unreachable or colliding regions. Self/ground collision status uses the
+collision meshes with BVH triangle tests; Rapier's contact response uses
+per-link convex hulls in a simplified single-rigid-body mode. It is not an
+articulated robot dynamics solver.
 
 ## Prerequisites
 
@@ -440,6 +447,26 @@ GET    /api/robot-library/:id
 DELETE /api/robot-library/:id
 ```
 
+Project Git mirrors:
+
+```text
+GET  /api/projects/:projectId/git/status
+POST /api/projects/:projectId/git/stage
+POST /api/projects/:projectId/git/unstage
+POST /api/projects/:projectId/git/discard
+POST /api/projects/:projectId/git/commit
+GET  /api/projects/:projectId/git/log
+GET  /api/projects/:projectId/git/branches
+POST /api/projects/:projectId/git/branches
+POST /api/projects/:projectId/git/branches/switch
+POST /api/projects/:projectId/git/branches/delete
+POST /api/projects/:projectId/git/reset-hard
+```
+
+Git metadata is stored in the backend's project work directories, not in
+PostgreSQL. These destructive Git operations require an authenticated project
+owner.
+
 The frontend obtains a short-lived ticket through `/api/auth/ws-ticket` and
 opens `/ws/files?ticket=<ticket>&projectId=<project-id>`. Supported messages
 are `file:create`, `file:update`, `file:rename`, and `file:delete`.
@@ -499,14 +526,9 @@ docker compose down -v
 
 ## Future Runtime Pipeline
 
-```text
-React editors
-  -> frontend JSON/text
-  -> compiler intermediate representation
-  -> PLC/robot/HMI code generation
-  -> C/C++ target code
-  -> Linux + FPGA controller
-```
+See [compiler-pipeline.mmd](compiler-pipeline.mmd). It describes a proposed
+pipeline; there is no `/api/projects/:id/build` compiler endpoint or controller
+deployment service in the active backend yet.
 
 The planned compiler will translate graph editor JSON, structured text, data
 blocks, HMI definitions, and robot programs into a common intermediate

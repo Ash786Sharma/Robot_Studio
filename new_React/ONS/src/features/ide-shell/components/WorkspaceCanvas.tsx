@@ -174,10 +174,10 @@ export const WorkspaceCanvas = () => {
                   <span>{tab.label}</span>
                   {tabStatuses[tab.id] && tab.id !== "viewer" && (
                     <span className="flex items-center gap-1 text-[10px] font-semibold" title={`${tabStatuses[tab.id]?.saveStatus === "unsaved" ? "Unsaved" : "Saved"}${tabStatuses[tab.id]?.gitStatus ? `, Git ${tabStatuses[tab.id]?.gitStatus}` : ""}`}>
-                      <span className={tabStatuses[tab.id]?.saveStatus === "unsaved" ? "text-amber-400" : "text-emerald-400"}>
+                      <span className={tabStatuses[tab.id]?.saveStatus === "unsaved" ? "text-status-warning" : "text-status-success"}>
                         {tabStatuses[tab.id]?.saveStatus === "unsaved" ? "●" : "✓"}
                       </span>
-                      {tabStatuses[tab.id]?.gitStatus && <span className="text-sky-400">{tabStatuses[tab.id]?.gitStatus}</span>}
+                      {tabStatuses[tab.id]?.gitStatus && <span className="text-status-info">{tabStatuses[tab.id]?.gitStatus}</span>}
                     </span>
                   )}
                   

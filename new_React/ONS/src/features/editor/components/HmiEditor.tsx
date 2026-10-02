@@ -50,9 +50,9 @@ export const HmiEditor = ({ fileName }: { fileName?: string }) => {
       <LucideIcons.Monitor className="h-4 w-4 text-[var(--primary)]" />
     </div>
     <div className="flex min-h-0 flex-1 gap-3 p-3">
-      <div className="flex w-36 shrink-0 flex-col gap-1 rounded-lg border border-white/10 bg-black/20 p-2 backdrop-blur-md">
+      <div className="flex w-36 shrink-0 flex-col gap-1 rounded-lg border border-ide-glass-border bg-ide-glass p-2 backdrop-blur-md">
         <p className="px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--ide-text-inactive)]">Widgets</p>
-        {widgets.map((widget) => <IdeBarItem key={widget} tooltip={`Add ${widget}`} text={widget} icon={<LucideIcons.Plus className="h-3 w-3" />} side="right" onClick={() => addWidget(widget)} className="w-full justify-start border-white/10 bg-white/5 text-left text-[11px] hover:bg-white/10" />)}
+        {widgets.map((widget) => <IdeBarItem key={widget} tooltip={`Add ${widget}`} text={widget} icon={<LucideIcons.Plus className="h-3 w-3" />} side="right" onClick={() => addWidget(widget)} className="w-full justify-start border-ide-glass-border bg-ide-glass-surface text-left text-[11px] hover:bg-ide-glass-hover" />)}
       </div>
       <div className="relative flex min-w-0 flex-1 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--ide-panel-bg)]/50">
         <div className="flex flex-col rounded border border-[var(--border)] bg-[var(--ide-surface-bg)] shadow-2xl">

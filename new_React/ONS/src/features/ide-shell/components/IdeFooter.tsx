@@ -24,7 +24,7 @@ export const IdeFooter = () => {
         {/* Remote Server Node Connection */}
         <IdeBarItem 
           tooltip="Connected to Remote Server"
-          icon={<span className="h-1.5 w-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />}
+          icon={<span className="h-1.5 w-1.5 rounded-full bg-status-success shadow-[0_0_8px_var(--status-success-glow)]" />}
           text="ONS: UR5"
           className="bg-transparent border-none text-inherit hover:bg-ide-hover"
         />
@@ -54,7 +54,7 @@ export const IdeFooter = () => {
           <div className="flex items-center gap-1">
             <XCircle className="h-3 w-3 text-destructive" />
             <span className="text-inherit font-medium">{0}</span>
-            <AlertTriangle className="h-3 w-3 text-amber-500 dark:text-amber-400" />
+            <AlertTriangle className="h-3 w-3 text-status-warning" />
             <span className="text-inherit font-medium">{2}</span>
           </div>
         </IdeBarItem>

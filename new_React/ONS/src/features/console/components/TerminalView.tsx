@@ -10,7 +10,7 @@ export const TerminalView: React.FC = () => {
     <div className="w-full h-full bg-[var(--ide-surface-bg)] p-2 flex flex-col">
       <div className="flex items-center justify-between text-xs text-[var(--ide-text-inactive)] border-b border-[var(--border)] pb-1 mb-2 font-mono select-none">
         <span>TERMINAL</span>
-        <span className={activeProjectId ? "text-emerald-500 font-bold" : "text-[var(--ide-text-inactive)] font-bold"}>
+        <span className={activeProjectId ? "text-status-success font-bold" : "text-[var(--ide-text-inactive)] font-bold"}>
           {activeProjectId ? "● CONNECTED" : "○ NO PROJECT OPEN"}
         </span>
       </div>

@@ -20,6 +20,13 @@ describe("parseUrdfToOrd", () => {
     expect(ord.name).toBe("ur5");
     expect(ord.links).toHaveLength(7);
     expect(ord.joints).toHaveLength(6);
+    expect(ord.links.find((link) => link.name === "base_link")?.mass).toBe(4);
+    expect(ord.links.find((link) => link.name === "upper_arm_link")?.centerOfMass).toEqual([0, 0, 0.28]);
+    const wrist3 = ord.links.find((link) => link.name === "wrist_3_link")!;
+    expect(wrist3.mass).toBeCloseTo(0.1879);
+    expect(wrist3.inertia[1]).toBeCloseTo(0.000132117188);
+    expect(ord.joints.find((joint) => joint.name === "shoulder_pan_joint")?.limits?.velocity).toBe(3.15);
+    expect(ord.joints.find((joint) => joint.name === "wrist_3_joint")?.limits?.velocity).toBe(3.2);
     // UR5 is a pure serial chain, so every joint sits on the DH reference chain.
     for (const joint of ord.joints) {
       expect(joint.type).toBe("revolute");
@@ -38,5 +45,22 @@ describe("parseUrdfToOrd", () => {
   <joint name="j1" type="floating"><parent link="base"/><child link="tip"/></joint>
 </robot>`;
     expect(() => parseUrdfToOrd(xml, "x", () => undefined)).toThrow(/Unsupported joint type/);
+  });
+
+  it("rotates inertial tensors from the inertial frame into the link frame", () => {
+    const xml = `<robot name="inertial-frame">
+  <link name="base">
+    <inertial>
+      <origin xyz="0 0 0" rpy="1.5707963267948966 0 0" />
+      <mass value="1" />
+      <inertia ixx="1" iyy="2" izz="3" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+  </link>
+</robot>`;
+
+    const ord = parseUrdfToOrd(xml, "x", () => undefined);
+    expect(ord.links[0].inertia[0]).toBeCloseTo(1);
+    expect(ord.links[0].inertia[1]).toBeCloseTo(3);
+    expect(ord.links[0].inertia[2]).toBeCloseTo(2);
   });
 });

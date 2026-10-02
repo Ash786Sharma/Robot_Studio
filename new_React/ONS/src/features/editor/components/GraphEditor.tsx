@@ -137,12 +137,12 @@ export const RealReactFlowCanvas = ({ showChanges = false, onCloseChanges, devic
   }
   return (
     <div data-theme={currentTheme} className={`w-full h-full relative overflow-hidden ${safetyProgram ? "ring-1 ring-inset ring-destructive/60" : ""}`} style={{ backgroundColor: surfaceColor }} onDrop={handleDrop} onDragOver={(event) => event.preventDefault()}>
-      <div className="absolute left-3 top-3 z-20 flex max-h-[calc(100%-24px)] w-36 flex-col gap-1 overflow-auto rounded-xl border border-white/10 bg-black/25 p-2 shadow-xl backdrop-blur-md">
+      <div className="absolute left-3 top-3 z-20 flex max-h-[calc(100%-24px)] w-36 flex-col gap-1 overflow-auto rounded-xl border border-ide-glass-border bg-ide-glass p-2 shadow-xl shadow-ide backdrop-blur-md">
         <div className={`px-1 pb-1 text-[10px] font-semibold uppercase tracking-wide ${safetyProgram ? "text-destructive" : "text-[var(--ide-text-inactive)]"}`}>{safetyProgram ? "Safety Logic" : device === "robot" ? "Robot Blocks" : "PLC Blocks"}</div>
         {blocks.map((block) => (
-          <div key={block} draggable onDragStart={(event) => event.dataTransfer.setData("application/x-ons-block", block)} className="cursor-grab rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-[11px] text-[var(--foreground)] hover:bg-white/10 active:cursor-grabbing">{block}</div>
+          <div key={block} draggable onDragStart={(event) => event.dataTransfer.setData("application/x-ons-block", block)} className="cursor-grab rounded-md border border-ide-glass-border bg-ide-glass-surface px-2 py-1.5 text-[11px] text-[var(--foreground)] hover:bg-ide-glass-hover active:cursor-grabbing">{block}</div>
         ))}
-        {fileName && <div className="border-t border-white/10 pt-1 text-[9px] text-[var(--ide-text-inactive)]">{fileName}</div>}
+        {fileName && <div className="border-t border-ide-glass-border pt-1 text-[9px] text-[var(--ide-text-inactive)]">{fileName}</div>}
       </div>
       {showChanges && (
         <div className="absolute left-3 top-3 z-10 flex items-start gap-2 rounded-md border border-[var(--border)] bg-[var(--ide-panel-bg)]/95 px-3 py-2 text-[11px] shadow-lg">
@@ -178,7 +178,7 @@ export const RealReactFlowCanvas = ({ showChanges = false, onCloseChanges, devic
           pannable
           zoomable
           style={{ width: 150, height: 100, backgroundColor: panelColor, border: `1px solid ${borderColor}` }}
-          maskColor="rgba(0, 0, 0, 0.25)"
+          maskColor={`color-mix(in srgb, ${surfaceColor} 35%, transparent)`}
         />
       </ReactFlow>
     </div>

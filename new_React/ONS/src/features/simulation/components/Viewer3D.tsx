@@ -1,7 +1,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Grid, Text, Line } from "@react-three/drei"
-import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier"
+import { Physics, RigidBody, CuboidCollider, ConvexHullCollider } from "@react-three/rapier"
 import { useThemeStore } from "@/core/store/themeStore"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -10,27 +10,44 @@ import { IdeBarItem } from "@/features/ide-shell/components/IdeBarItem"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Box3, Group, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three"
-import { useRobotSimulationStore } from "@/core/store/robotSimulationStore"
+import { DoubleSide, Group, Mesh, MeshBasicMaterial, Object3D, Vector3 } from "three"
+import { ConvexGeometry } from "three/examples/jsm/geometries/ConvexGeometry.js"
+import { useRobotSimulationStore, type RobotPose } from "@/core/store/robotSimulationStore"
 import { useProjectStore } from "@/core/store/projectStore"
 import { devicesApi } from "@/core/api/devicesApi"
 import { robotOrdApi, type OrdDocument } from "@/core/api/robotOrdApi"
 import { parseOrdMesh } from "@/features/simulation/lib/parseOrdMesh"
-import { applyJointValue, buildOrdRobotGroups, forEachMesh, type OrdRobotGroups } from "@/features/simulation/lib/buildOrdRobot"
+import { applyJointValue, buildOrdRobotGroups, forEachMesh, sampleTcpReach, type OrdRobotGroups } from "@/features/simulation/lib/buildOrdRobot"
+import { checkRobotCollisions, computeLinkHullColliders, createRobotCollisionModel, linkMassProperties, type LinkHullCollider, type RobotCollisionModel } from "@/features/simulation/lib/robotCollision"
 
 const getIdeColor = (token: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(token).trim()
 
-/** Walks up the object graph to check whether `node` lives inside `ancestor`'s subtree (e.g. a mesh inside a selected link). */
-const isDescendantOf = (node: Object3D, ancestor: Object3D): boolean => {
+/** Nearest link group above `node` — link groups are nested along the chain, so plain ancestry would match every downstream link. */
+const owningLinkGroup = (node: Object3D, linkGroups: Set<Object3D>): Object3D | undefined => {
   for (let current: Object3D | null = node; current; current = current.parent) {
-    if (current === ancestor) return true
+    if (linkGroups.has(current)) return current
   }
-  return false
+  return undefined
 }
 
 /** This renderer's chosen visual scale for the loaded robot — purely a display choice, not part of the .ord data. */
 const ROBOT_DISPLAY_SCALE = 0.55
+
+const ReachEnvelope = ({ ord, tcpOffset, color }: { ord: OrdDocument; tcpOffset: { X: number; Y: number; Z: number }; color: string }) => {
+  const geometry = useMemo(() => {
+    const samples = sampleTcpReach(ord, [tcpOffset.X / 1000, tcpOffset.Y / 1000, tcpOffset.Z / 1000], ROBOT_DISPLAY_SCALE)
+    if (samples.length < 12) return null
+    const positions: Vector3[] = []
+    for (let index = 0; index < samples.length; index += 3) {
+      positions.push(new Vector3(samples[index], samples[index + 1], samples[index + 2]))
+    }
+    return new ConvexGeometry(positions)
+  }, [ord, tcpOffset.X, tcpOffset.Y, tcpOffset.Z])
+  useEffect(() => () => geometry?.dispose(), [geometry])
+  if (!geometry) return null
+  return <mesh geometry={geometry}><meshBasicMaterial color={color} side={DoubleSide} transparent opacity={0.11} depthWrite={false} /></mesh>
+}
 
 const gridMeasurements = [-1, -0.5, 0.5, 1]
 
@@ -102,38 +119,35 @@ const OrdRobot = ({
   jointValues,
   linearPosition,
   tcpOffset,
-  checkMode,
+  showTcpFrame,
   onSelfCollision,
   onPhysicsCollision,
-  isMoving,
   showCollisionBody,
   showVisual,
   physicsMode,
-  totalMass,
 }: {
   projectId: string | null
   deviceId: string | null
   ord: OrdDocument | null
   jointValues: Record<string, number>
-  linearPosition: { X: number; Y: number; Z: number }
+  linearPosition: RobotPose["linear"]
   tcpOffset: { X: number; Y: number; Z: number }
-  checkMode: boolean
+  showTcpFrame: boolean
   onSelfCollision: (colliding: boolean) => void
   onPhysicsCollision: (colliding: boolean) => void
-  isMoving: boolean
   showCollisionBody: boolean
   showVisual: boolean
   physicsMode: "kinematic" | "dynamic"
-  totalMass: number
 }) => {
-  const groupRef = useRef<Group>(null)
-  const collisionGroupRef = useRef<Group>(null)
   const tcpMarkerRef = useRef<Group>(null)
   const jointMarkerRef = useRef<Group>(null)
   const [visualGroups, setVisualGroups] = useState<OrdRobotGroups | null>(null)
   const [collisionGroups, setCollisionGroups] = useState<OrdRobotGroups | null>(null)
-  const [physicsCollision, setPhysicsCollision] = useState(false)
-  const [selfCollision, setSelfCollision] = useState(false)
+  const [collisionModel, setCollisionModel] = useState<RobotCollisionModel | null>(null)
+  // State (not a ref) because the body group remounts when it moves in/out of the dynamic RigidBody.
+  const [bodyGroup, setBodyGroup] = useState<Group | null>(null)
+  const [hullColliders, setHullColliders] = useState<{ version: number; colliders: LinkHullCollider[] }>({ version: 0, colliders: [] })
+  const [collidingLinks, setCollidingLinks] = useState<Set<string>>(new Set())
   const [loadError, setLoadError] = useState<string | null>(null)
   const baseLift = 0
   const selectedKinematicNode = useRobotSimulationStore((state) => state.selectedKinematicNode)
@@ -149,6 +163,7 @@ const OrdRobot = ({
   useEffect(() => {
     if (!ord || !projectId || !deviceId) return
     let cancelled = false
+    let collisionLoadTimer: number | undefined
 
     async function buildVariant(meshSet: "visual" | "collision", tintColor?: string) {
       const refs = ord!.meshes[meshSet]
@@ -189,56 +204,74 @@ const OrdRobot = ({
     }
 
     buildVariant("visual")
-      .then((groups) => { if (!cancelled && groups) setVisualGroups(groups) })
+      .then((groups) => {
+        if (cancelled || !groups) return
+        setVisualGroups(groups)
+        collisionLoadTimer = window.setTimeout(() => {
+          buildVariant("collision", "#f97316")
+            .then((collisionVariant) => {
+              if (cancelled || !collisionVariant) return
+              setCollisionModel(createRobotCollisionModel(collisionVariant, ord!))
+              setCollisionGroups(collisionVariant)
+            })
+            .catch(() => setLoadError("Unable to load the robot's collision meshes"))
+        }, 500)
+      })
       .catch(() => setLoadError("Unable to load the robot's visual meshes"))
-    buildVariant("collision", "#f97316")
-      .then((groups) => { if (!cancelled && groups) setCollisionGroups(groups) })
-      .catch(() => setLoadError("Unable to load the robot's collision meshes"))
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      if (collisionLoadTimer !== undefined) window.clearTimeout(collisionLoadTimer)
+    }
   }, [ord, projectId, deviceId])
 
   useEffect(() => {
-    const parent = groupRef.current
-    if (!parent || !visualGroups) return
-    parent.add(visualGroups.root)
-    return () => { parent.remove(visualGroups.root) }
-  }, [visualGroups])
+    if (!bodyGroup || !visualGroups) return
+    bodyGroup.add(visualGroups.root)
+    return () => { bodyGroup.remove(visualGroups.root) }
+  }, [bodyGroup, visualGroups])
 
   useEffect(() => {
-    const parent = collisionGroupRef.current
-    if (!parent || !collisionGroups) return
-    parent.add(collisionGroups.root)
-    return () => { parent.remove(collisionGroups.root) }
-  }, [collisionGroups])
+    if (!bodyGroup || !collisionGroups) return
+    bodyGroup.add(collisionGroups.root)
+    return () => { bodyGroup.remove(collisionGroups.root) }
+  }, [bodyGroup, collisionGroups])
 
-  useEffect(() => {
-    if (!ord) return
-    for (const [jointName, degreesOrMm] of Object.entries(jointValues)) {
-      const joint = ord.joints.find((entry) => entry.name === jointName)
-      const value = joint?.type === "prismatic" ? degreesOrMm / 100 : (degreesOrMm * Math.PI) / 180
-      if (visualGroups) applyJointValue(visualGroups, ord, jointName, value)
-      if (collisionGroups) applyJointValue(collisionGroups, ord, jointName, value)
-    }
-  }, [jointValues, ord, visualGroups, collisionGroups])
+  // Displayed joint values chase the jog targets at each joint's velocity limit (see useFrame).
+  const currentJoints = useRef<Record<string, number>>({})
+  const hullsStale = useRef(false)
+  const lastHullUpdate = useRef(0)
+  useEffect(() => { currentJoints.current = {} }, [visualGroups, collisionGroups])
+
+  const refreshHulls = () => {
+    if (physicsMode !== "dynamic" || !collisionModel || !collisionGroups || !bodyGroup) return
+    setHullColliders((previous) => ({ version: previous.version + 1, colliders: computeLinkHullColliders(collisionModel, collisionGroups) }))
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(refreshHulls, [physicsMode, collisionModel, collisionGroups, bodyGroup])
 
   useEffect(() => {
     if (collisionGroups) collisionGroups.root.visible = showCollisionBody
   }, [collisionGroups, showCollisionBody])
 
-  // Combined highlight/collision tint — collision (robot-wide red flash) always wins over a selection highlight.
+  // Combined highlight/collision tint — a colliding link's red always wins over the selection highlight.
   useEffect(() => {
     if (!visualGroups) return
     visualGroups.root.visible = showVisual
     const highlightGroup = highlightedLinkName ? visualGroups.linkGroups.get(highlightedLinkName) : undefined
+    const allLinkGroups = new Set<Object3D>(visualGroups.linkGroups.values())
     forEachMesh(visualGroups.root, (mesh) => {
-      const material = mesh.material as { emissive?: { set: (color: string) => void }; emissiveIntensity?: number }
-      const isColliding = physicsCollision || selfCollision
-      const isHighlighted = !isColliding && Boolean(highlightGroup) && isDescendantOf(mesh, highlightGroup!)
-      material.emissive?.set(isColliding ? "#ef4444" : isHighlighted ? "#22d3ee" : "#000000")
-      if (material.emissiveIntensity !== undefined) material.emissiveIntensity = isColliding ? 0.8 : isHighlighted ? 0.75 : 0
+      const linkGroup = owningLinkGroup(mesh, allLinkGroups)
+      const isColliding = Boolean(linkGroup && collidingLinks.has(linkGroup.name))
+      const isHighlighted = !isColliding && Boolean(highlightGroup) && linkGroup === highlightGroup
+      // Multi-material DAE meshes (e.g. UR5 base.dae) carry an array of materials.
+      const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as { emissive?: { set: (color: string) => void }; emissiveIntensity?: number }[]
+      for (const material of materials) {
+        material.emissive?.set(isColliding ? "#ef4444" : isHighlighted ? "#22d3ee" : "#000000")
+        if (material.emissiveIntensity !== undefined) material.emissiveIntensity = isColliding ? 0.8 : isHighlighted ? 0.75 : 0
+      }
     })
-  }, [visualGroups, physicsCollision, selfCollision, showVisual, highlightedLinkName])
+  }, [visualGroups, collidingLinks, showVisual, highlightedLinkName])
 
   // The joint frame marker is reparented directly into the selected joint's own axis group, so its
   // position/orientation always matches the joint's live screw-axis pose with zero extra per-frame math.
@@ -250,80 +283,96 @@ const OrdRobot = ({
     if (axisGroup) {
       axisGroup.add(marker)
       marker.visible = true
-    } else if (groupRef.current) {
-      groupRef.current.add(marker)
+    } else if (bodyGroup) {
+      bodyGroup.add(marker)
       marker.visible = false
     }
-  }, [selectedKinematicNode, visualGroups])
+  }, [selectedKinematicNode, visualGroups, bodyGroup])
 
-  useEffect(() => {
-    if (!isMoving) {
-      setPhysicsCollision(false)
-      setSelfCollision(false)
-      onPhysicsCollision(false)
-      onSelfCollision(false)
-    }
-  }, [isMoving, onPhysicsCollision, onSelfCollision])
-
-  useFrame(() => {
-    if (!isMoving || !visualGroups || !collisionGroups || !groupRef.current?.parent) return
-    const tcpLink = visualGroups.tcpLinkName ? visualGroups.linkGroups.get(visualGroups.tcpLinkName) : undefined
-    if (!tcpLink) return
-    const tcp = new Vector3(tcpOffset.X / 100, tcpOffset.Y / 100, tcpOffset.Z / 100)
-    tcpLink.localToWorld(tcp)
-    groupRef.current.parent.worldToLocal(tcp)
-    tcpMarkerRef.current?.position.copy(tcp)
-
-    const linkNames = [...collisionGroups.linkGroups.keys()]
-    const boxes = linkNames.map((name) => {
-      const box = new Box3().setFromObject(collisionGroups.linkGroups.get(name)!)
-      box.expandByScalar(-0.01)
-      return box.isEmpty() ? null : box
-    })
-    let colliding = false
-    for (let first = 0; first < boxes.length && !colliding; first += 1) {
-      for (let second = first + 2; second < boxes.length; second += 1) {
-        const firstBox = boxes[first]
-        const secondBox = boxes[second]
-        if (firstBox && secondBox && firstBox.intersectsBox(secondBox)) {
-          colliding = true
-          break
+  const lastCollisionKey = useRef("")
+  const poseDirty = useRef(true)
+  useEffect(() => { poseDirty.current = true }, [jointValues, linearPosition, collisionModel])
+  useFrame((state, delta) => {
+    if (ord) {
+      let moved = false
+      for (const [jointName, target] of Object.entries(jointValues)) {
+        const joint = ord.joints.find((entry) => entry.name === jointName)
+        const isPrismatic = joint?.type === "prismatic"
+        const current = currentJoints.current[jointName]
+        let next = target
+        if (current !== undefined && joint?.limits?.velocity) {
+          const maxStep = joint.limits.velocity * (isPrismatic ? 1000 : 180 / Math.PI) * Math.min(delta, 0.1)
+          next = current + Math.max(-maxStep, Math.min(maxStep, target - current))
         }
+        if (next === current) continue
+        currentJoints.current[jointName] = next
+        const value = isPrismatic ? next / 1000 : (next * Math.PI) / 180
+        if (visualGroups) applyJointValue(visualGroups, ord, jointName, value)
+        if (collisionGroups) applyJointValue(collisionGroups, ord, jointName, value)
+        moved = true
+      }
+      if (moved) {
+        poseDirty.current = true
+        hullsStale.current = true
+      }
+      // Rebuilding hulls is costly, so throttle while moving and always refresh once motion settles.
+      if (hullsStale.current && (!moved || state.clock.elapsedTime - lastHullUpdate.current > 0.15)) {
+        hullsStale.current = false
+        lastHullUpdate.current = state.clock.elapsedTime
+        refreshHulls()
       }
     }
-    if (colliding !== selfCollision) {
-      setSelfCollision(colliding)
-      onSelfCollision(colliding)
+
+    if (!visualGroups || !collisionGroups || !collisionModel || !tcpMarkerRef.current?.parent) return
+    const tcpLink = visualGroups.tcpLinkName ? visualGroups.linkGroups.get(visualGroups.tcpLinkName) : undefined
+    if (tcpLink) {
+      const tcp = new Vector3(tcpOffset.X / 1000, tcpOffset.Y / 1000, tcpOffset.Z / 1000)
+      tcpLink.localToWorld(tcp)
+      tcpMarkerRef.current.parent.worldToLocal(tcp)
+      tcpMarkerRef.current.position.copy(tcp)
     }
+
+    if (!poseDirty.current && physicsMode !== "dynamic") return
+    poseDirty.current = false
+    const { selfPairs, groundLinks } = checkRobotCollisions(collisionModel, collisionGroups.root)
+    const key = `${selfPairs.map((pair) => pair.join("+")).join(",")}|${groundLinks.join(",")}`
+    if (key === lastCollisionKey.current) return
+    lastCollisionKey.current = key
+    setCollidingLinks(new Set([...selfPairs.flat(), ...groundLinks]))
+    onSelfCollision(selfPairs.length > 0)
+    onPhysicsCollision(groundLinks.length > 0)
   })
 
   return (
-    <group position={[linearPosition.X / 100, linearPosition.Y / 100, baseLift + linearPosition.Z / 100]}>
-      <group ref={groupRef}>
-      </group>
-      <RigidBody
-        type={physicsMode === "dynamic" ? "dynamic" : "kinematicPosition"}
-        mass={physicsMode === "dynamic" ? Math.max(totalMass, 0.1) : undefined}
-        // Building a trimesh collider from an empty group (before meshes finish loading) crashes Rapier — defer until real geometry exists.
-        colliders={collisionGroups ? "trimesh" : false}
-        onCollisionEnter={(event) => {
-          if (!isMoving || event.other.rigidBodyObject?.userData?.collisionType === "ground") return
-          setPhysicsCollision(true)
-          onPhysicsCollision(true)
-        }}
-        onCollisionExit={(event) => {
-          if (!isMoving || event.other.rigidBodyObject?.userData?.collisionType === "ground") return
-          setPhysicsCollision(false)
-          onPhysicsCollision(false)
-        }}
-      >
-        <group ref={collisionGroupRef} visible={showCollisionBody} />
-      </RigidBody>
-      {isMoving && (physicsCollision || selfCollision) && <mesh position={[0, 0, 0.02]}>
+    <group
+      position={[linearPosition.X / 1000, linearPosition.Y / 1000, baseLift + linearPosition.Z / 1000]}
+      rotation={[(linearPosition.RX * Math.PI) / 180, (linearPosition.RY * Math.PI) / 180, (linearPosition.RZ * Math.PI) / 180, "ZYX"]}
+    >
+      {physicsMode === "dynamic" ? (
+        <RigidBody type="dynamic" colliders={false}>
+          <group ref={setBodyGroup} />
+          {hullColliders.colliders.map((hull) => {
+            const link = ord?.links.find((entry) => entry.name === hull.name)
+            const massProperties = link ? linkMassProperties(link, hull.scale) : undefined
+            return (
+              <ConvexHullCollider
+                key={`${hull.name}:${hullColliders.version}`}
+                args={[hull.vertices]}
+                position={hull.position}
+                rotation={hull.rotation}
+                {...(massProperties ? { massProperties } : { mass: Math.max(link?.mass ?? 0, 0.01) })}
+              />
+            )
+          })}
+        </RigidBody>
+      ) : (
+        <group ref={setBodyGroup} />
+      )}
+      {collidingLinks.size > 0 && <mesh position={[0, 0, 0.02]}>
         <ringGeometry args={[0.34, 0.38, 32]} />
         <meshBasicMaterial color="#ef4444" transparent opacity={0.75} />
       </mesh>}
-      <group ref={tcpMarkerRef} visible={checkMode}>
+      <group ref={tcpMarkerRef} visible={showTcpFrame}>
         <mesh>
           <sphereGeometry args={[0.045, 16, 16]} />
           <meshBasicMaterial color="#22c55e" />
@@ -352,7 +401,7 @@ const OrdRobot = ({
 
 export const RealThreeJsViewer = () => {
   const [jogMode, setJogMode] = useState<"joint" | "linear">("joint")
-  const [panelTab, setPanelTab] = useState<"motion" | "physics">("motion")
+  const [panelTab, setPanelTab] = useState<"jog" | "view" | "physics">("jog")
   const [physicsSubTab, setPhysicsSubTab] = useState<"mode" | "link" | "joint">("mode")
   const [step, setStep] = useState(1)
   const projectId = useProjectStore((state) => state.activeProjectId)
@@ -360,15 +409,16 @@ export const RealThreeJsViewer = () => {
   const linearPosition = useRobotSimulationStore((state) => state.linear)
   const tcpOffset = useRobotSimulationStore((state) => state.tcp)
   const checkMode = useRobotSimulationStore((state) => state.checkWorkspace)
+  const showTcpFrame = useRobotSimulationStore((state) => state.showTcpFrame)
   const showCollisionBody = useRobotSimulationStore((state) => state.showCollisionBody)
   const showVisual = useRobotSimulationStore((state) => state.showVisual)
   const setJoint = useRobotSimulationStore((state) => state.setJoint)
   const setLinear = useRobotSimulationStore((state) => state.setLinear)
   const setTcp = useRobotSimulationStore((state) => state.setTcp)
   const setCheckMode = useRobotSimulationStore((state) => state.setCheckWorkspace)
+  const setShowTcpFrame = useRobotSimulationStore((state) => state.setShowTcpFrame)
   const setShowCollisionBody = useRobotSimulationStore((state) => state.setShowCollisionBody)
   const setShowVisual = useRobotSimulationStore((state) => state.setShowVisual)
-  const activeLayer = useRobotSimulationStore((state) => state.activeLayer)
   const loadedOrd = useRobotSimulationStore((state) => state.loadedOrd)
   const setLoadedOrd = useRobotSimulationStore((state) => state.setLoadedOrd)
   const updateLinkProperties = useRobotSimulationStore((state) => state.updateLinkProperties)
@@ -377,15 +427,9 @@ export const RealThreeJsViewer = () => {
   const setPhysicsMode = useRobotSimulationStore((state) => state.setPhysicsMode)
   const selectedKinematicNode = useRobotSimulationStore((state) => state.selectedKinematicNode)
   const setSelectedKinematicNode = useRobotSimulationStore((state) => state.setSelectedKinematicNode)
-  const isPlaying = useRobotSimulationStore((state) => state.isPlaying)
-  const simulationTime = useRobotSimulationStore((state) => state.simulationTime)
-  const setPlaying = useRobotSimulationStore((state) => state.setPlaying)
-  const stepSimulation = useRobotSimulationStore((state) => state.stepSimulation)
   const resetSimulation = useRobotSimulationStore((state) => state.resetSimulation)
   const [selfCollision, setSelfCollision] = useState(false)
   const [physicsCollision, setPhysicsCollision] = useState(false)
-  const [isMoving, setIsMoving] = useState(false)
-  const initializedPose = useRef(false)
   const queryClient = useQueryClient()
 
   const devicesQuery = useQuery({
@@ -412,15 +456,6 @@ export const RealThreeJsViewer = () => {
 
   const totalMass = useMemo(() => loadedOrd?.links.reduce((sum, link) => sum + link.mass, 0) ?? 0, [loadedOrd])
 
-  useEffect(() => {
-    if (!initializedPose.current) {
-      initializedPose.current = true
-      return
-    }
-    setIsMoving(true)
-    const timer = window.setTimeout(() => setIsMoving(false), 300)
-    return () => window.clearTimeout(timer)
-  }, [jointValues, linearPosition])
   const currentTheme = useThemeStore((state) => state.currentTheme)
   const surfaceColor = getIdeColor("--ide-surface-bg")
   const primaryColor = getIdeColor("--primary")
@@ -438,20 +473,21 @@ export const RealThreeJsViewer = () => {
 
   return (
     <div data-theme={currentTheme} className="w-full h-full relative overflow-hidden" style={{ backgroundColor: surfaceColor }}>
-      <div className="absolute right-3 top-3 z-20 w-52 rounded-xl border border-white/10 bg-black/25 p-3 text-[var(--foreground)] shadow-xl backdrop-blur-md">
+      <div className="absolute right-3 top-3 z-20 flex max-h-[calc(100%-1.5rem)] w-[min(19rem,calc(100%-1.5rem))] flex-col rounded-xl border border-ide-glass-border bg-ide-glass text-[var(--foreground)] shadow-xl shadow-ide backdrop-blur-md">
+      <div className="shrink-0 border-b border-ide-glass-border px-3 pt-3">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--ide-text-inactive)]">Jog</p>
-            <p className="text-[11px] font-medium">Manual robot motion</p>
+            <p className="text-xs font-semibold">Robot control</p>
+            <p className="text-[10px] text-[var(--ide-text-inactive)]">{loadedOrd?.name ?? "No robot loaded"}</p>
           </div>
           <LucideIcons.Move3D className="h-4 w-4 text-[var(--primary)]" />
         </div>
-        <div className="mb-3 grid grid-cols-2 gap-1 rounded-md bg-white/5 p-1">
-          {(["motion", "physics"] as const).map((tab) => (
+        <div className="mb-3 grid grid-cols-3 gap-1 rounded-md bg-ide-glass-surface p-1">
+          {(["jog", "view", "physics"] as const).map((tab) => (
             <IdeBarItem
               key={tab}
-              tooltip={tab === "motion" ? "Jog the robot" : "Physics, mass, inertia & joint limits"}
-              text={tab === "motion" ? "Motion" : "Physics"}
+              tooltip={tab === "jog" ? "Command joint and base motion" : tab === "view" ? "Robot and workspace visibility" : "Simulation and robot properties"}
+              text={tab === "jog" ? "Jog" : tab === "view" ? "View" : "Physics"}
               side="bottom"
               isActive={panelTab === tab}
               onClick={() => setPanelTab(tab)}
@@ -459,14 +495,22 @@ export const RealThreeJsViewer = () => {
             />
           ))}
         </div>
-        {panelTab === "motion" ? (
+      </div>
+      <div className="min-h-0 overflow-y-auto p-3">
+        <div className="mb-3 flex items-center justify-between border-b border-ide-glass-border pb-2 text-[10px]">
+          <span className="text-[var(--ide-text-inactive)]">{loadedOrd ? `${loadedOrd.links.length} links · ${loadedOrd.joints.length} joints` : "No model"}</span>
+          <span className={selfCollision || physicsCollision ? "font-semibold text-destructive" : "text-status-success"}>
+            {selfCollision ? "Self collision" : physicsCollision ? "Ground contact" : "Clear"}
+          </span>
+        </div>
+        {panelTab === "jog" ? (
         <>
-        <div className="mb-3 grid grid-cols-2 gap-1 rounded-md bg-white/5 p-1">
+        <div className="mb-3 grid grid-cols-2 gap-1 rounded-md bg-ide-glass-surface p-1">
           {(["joint", "linear"] as const).map((mode) => (
             <IdeBarItem
               key={mode}
-              tooltip={`${mode === "joint" ? "Joint" : "Linear"} jog mode`}
-              text={mode === "joint" ? "Joint" : "Linear"}
+              tooltip={mode === "joint" ? "Set joint targets" : "Move the whole robot base"}
+              text={mode === "joint" ? "Joints" : "Base pose"}
               side="bottom"
               isActive={jogMode === mode}
               onClick={() => {
@@ -476,63 +520,11 @@ export const RealThreeJsViewer = () => {
             />
           ))}
         </div>
-        <div className="mb-2 rounded-md border border-white/10 bg-white/5 p-2 text-[10px]">
-          <div className="mb-1 text-[9px] uppercase tracking-wider text-[var(--ide-text-inactive)]">Robot layer</div>
-          <div className="font-mono text-[var(--primary)]">{activeLayer}</div>
-          <div className="mt-1 text-[9px] text-[var(--ide-text-inactive)]">{loadedOrd ? `${loadedOrd.links.length} links, ${loadedOrd.joints.length} joints` : "No robot loaded"}</div>
+        <div className="mb-2 flex items-center justify-end border-b border-ide-glass-border pb-2">
+          <IdeBarItem tooltip="Reset joint targets and base pose" text="Reset pose" icon={<LucideIcons.RotateCcw className="h-3.5 w-3.5" />} side="bottom" className="h-7 px-2 text-[10px]" onClick={resetSimulation} />
         </div>
-        <div className="mb-2 flex items-center gap-1 border-b border-white/10 pb-2">
-          <IdeBarItem tooltip={isPlaying ? "Pause simulation" : "Play simulation"} icon={isPlaying ? <LucideIcons.Pause className="h-3.5 w-3.5" /> : <LucideIcons.Play className="h-3.5 w-3.5" />} side="bottom" isActive={isPlaying} className="h-6 w-6 px-0" onClick={() => setPlaying(!isPlaying)} />
-          <IdeBarItem tooltip="Step simulation" icon={<LucideIcons.SkipForward className="h-3.5 w-3.5" />} side="bottom" className="h-6 w-6 px-0" onClick={stepSimulation} />
-          <IdeBarItem tooltip="Reset robot simulation" icon={<LucideIcons.RotateCcw className="h-3.5 w-3.5" />} side="bottom" className="h-6 w-6 px-0" onClick={resetSimulation} />
-          <span className="ml-auto font-mono text-[10px] text-[var(--ide-text-inactive)]">t={simulationTime.toFixed(2)}s</span>
-        </div>
-        <IdeBarItem
-          tooltip="Show workspace and TCP"
-          text="Check workspace"
-          icon={<LucideIcons.ScanSearch className="h-3.5 w-3.5" />}
-          side="bottom"
-          isActive={checkMode}
-          onClick={() => setCheckMode(!checkMode)}
-          className="mb-2 h-7 w-full justify-center text-[10px]"
-        />
-        {checkMode && <IdeBarItem
-          tooltip="Show collision proxy body"
-          text={showCollisionBody ? "Hide collision body" : "Show collision body"}
-          icon={<LucideIcons.Box className="h-3.5 w-3.5" />}
-          side="bottom"
-          isActive={showCollisionBody}
-          onClick={() => setShowCollisionBody(!showCollisionBody)}
-          className="mb-2 h-7 w-full justify-center text-[10px]"
-        />}
-        {checkMode && <IdeBarItem
-          tooltip="Show visual robot body"
-          text={showVisual ? "Hide visual body" : "Show visual body"}
-          icon={<LucideIcons.Eye className="h-3.5 w-3.5" />}
-          side="bottom"
-          isActive={showVisual}
-          onClick={() => setShowVisual(!showVisual)}
-          className="mb-2 h-7 w-full justify-center text-[10px]"
-        />}
-        {checkMode && (
-          <div className="mb-2 space-y-2 rounded-md border border-white/10 bg-white/5 p-2">
-            <div className="flex items-center justify-between text-[10px]">
-              <span className="font-semibold uppercase tracking-wide text-[var(--ide-text-inactive)]">TCP offset</span>
-              <span className={isMoving && (selfCollision || physicsCollision) ? "font-semibold text-destructive" : "text-emerald-400"}>{isMoving && (selfCollision || physicsCollision) ? "Collision" : "Clear"}</span>
-            </div>
-            {(Object.keys(tcpOffset) as Array<keyof typeof tcpOffset>).map((axis) => (
-              <div key={axis}>
-                <div className="mb-1 flex justify-between text-[10px]"><span>{axis}</span><span className="font-mono text-[var(--primary)]">{tcpOffset[axis].toFixed(1)} mm</span></div>
-                <Slider min={-250} max={250} step={0.1} value={[tcpOffset[axis]]} onValueChange={(values) => {
-                  const nextValue = Array.isArray(values) ? Number(values[0]) : Number(values)
-                  setTcp(axis, nextValue)
-                }} />
-              </div>
-            ))}
-          </div>
-        )}
-        <label className="mb-2 block text-[10px] text-[var(--ide-text-inactive)]">Step
-          <select value={step} onChange={(event) => setStep(Number(event.target.value))} className="mt-1 h-7 w-full rounded border border-white/10 bg-black/20 px-1 text-[11px] text-[var(--foreground)] outline-none">
+        <label className="mb-2 block text-[10px] text-[var(--ide-text-inactive)]">Jog resolution
+          <select value={step} onChange={(event) => setStep(Number(event.target.value))} className="mt-1 h-7 w-full rounded border border-ide-glass-border bg-ide-glass-input px-1 text-[11px] text-[var(--foreground)] outline-none">
             {[0.1, 1, 5, 10].map((value) => <option key={value} value={value}>{value}{jogMode === "joint" ? "°" : " mm / °"}</option>)}
           </select>
         </label>
@@ -542,15 +534,15 @@ export const RealThreeJsViewer = () => {
               const jointDef = loadedOrd?.joints.find((entry) => entry.name === joint)
               const isPrismatic = jointDef?.type === "prismatic"
               const toDeg = (rad: number) => (rad * 180) / Math.PI
-              const min = isPrismatic ? (jointDef?.limits?.lower ?? -1) * 100 : jointDef?.limits?.lower !== undefined ? toDeg(jointDef.limits.lower) : -180
-              const max = isPrismatic ? (jointDef?.limits?.upper ?? 1) * 100 : jointDef?.limits?.upper !== undefined ? toDeg(jointDef.limits.upper) : 180
+              const min = isPrismatic ? (jointDef?.limits?.lower ?? -1) * 1000 : jointDef?.limits?.lower !== undefined ? toDeg(jointDef.limits.lower) : -180
+              const max = isPrismatic ? (jointDef?.limits?.upper ?? 1) * 1000 : jointDef?.limits?.upper !== undefined ? toDeg(jointDef.limits.upper) : 180
               return (
                 <div key={joint}>
                   <div className="mb-1 flex items-center justify-between text-[10px]">
                     <span className="text-[var(--ide-text-inactive)]">{joint} <span className="opacity-60">Joint {index + 1}</span></span>
                     <span className="font-mono text-[var(--primary)]">{value.toFixed(1)}{isPrismatic ? " mm" : "°"}</span>
                   </div>
-                  <Slider min={min} max={max} step={0.1} value={[value]} onValueChange={(values) => {
+                  <Slider min={min} max={max} step={step} value={[value]} onValueChange={(values) => {
                     const nextValue = Array.isArray(values) ? Number(values[0]) : Number(values)
                     setJoint(joint, nextValue)
                   }} />
@@ -563,7 +555,7 @@ export const RealThreeJsViewer = () => {
             {linearAxes.map((linearAxis) => {
               const axisName = String(linearAxis)
               return (
-                <div key={axisName} className="rounded-md border border-white/10 bg-white/5 px-1.5 py-1">
+                <div key={axisName} className="rounded-md border border-ide-glass-border bg-ide-glass-surface px-1.5 py-1">
                   <div className="flex items-center gap-1">
                     <span className="w-7 font-semibold text-[10px] text-[var(--ide-text-inactive)]">{axisName}</span>
                     <span className="flex-1 text-right font-mono text-[10px] text-[var(--primary)]">{linearPosition[linearAxis].toFixed(1)}{axisName.startsWith("R") ? "°" : " mm"}</span>
@@ -571,7 +563,7 @@ export const RealThreeJsViewer = () => {
                   <Slider
                     min={axisName.startsWith("R") ? -180 : -1000}
                     max={axisName.startsWith("R") ? 180 : 1000}
-                    step={0.1}
+                    step={step}
                     value={[linearPosition[linearAxis]]}
                     onValueChange={(values) => {
                       const nextValue = Array.isArray(values) ? Number(values[0]) : Number(values)
@@ -585,16 +577,37 @@ export const RealThreeJsViewer = () => {
           </div>
         )}
         </>
+        ) : panelTab === "view" ? (
+        <div className="space-y-4">
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase text-[var(--ide-text-inactive)]">Visibility</p>
+            <div className="grid grid-cols-2 gap-1">
+              <IdeBarItem tooltip="Show the rendered robot" text="Visual" icon={<LucideIcons.Eye className="h-3.5 w-3.5" />} side="bottom" isActive={showVisual} onClick={() => setShowVisual(!showVisual)} className="h-8 justify-center text-[10px]" />
+              <IdeBarItem tooltip="Show the collision meshes" text="Collision" icon={<LucideIcons.Box className="h-3.5 w-3.5" />} side="bottom" isActive={showCollisionBody} onClick={() => setShowCollisionBody(!showCollisionBody)} className="h-8 justify-center text-[10px]" />
+              <IdeBarItem tooltip="Show the joint-limited TCP reach envelope (includes unreachable pockets)" text="TCP reach" icon={<LucideIcons.ScanSearch className="h-3.5 w-3.5" />} side="bottom" isActive={checkMode} onClick={() => setCheckMode(!checkMode)} className="h-8 justify-center text-[10px]" />
+              <IdeBarItem tooltip="Show the live tool-centre-point frame" text="TCP frame" icon={<LucideIcons.Crosshair className="h-3.5 w-3.5" />} side="bottom" isActive={showTcpFrame} onClick={() => setShowTcpFrame(!showTcpFrame)} className="h-8 justify-center text-[10px]" />
+            </div>
+          </div>
+          <div className="space-y-2 border-t border-ide-glass-border pt-3">
+            <p className="text-[10px] font-semibold uppercase text-[var(--ide-text-inactive)]">TCP offset</p>
+            {(Object.keys(tcpOffset) as Array<keyof typeof tcpOffset>).map((axis) => (
+              <div key={axis}>
+                <div className="mb-1 flex justify-between text-[10px]"><span>{axis}</span><span className="font-mono text-[var(--primary)]">{tcpOffset[axis].toFixed(1)} mm</span></div>
+                <Slider min={-250} max={250} step={0.1} value={[tcpOffset[axis]]} onValueChange={(values) => setTcp(axis, Number(Array.isArray(values) ? values[0] : values))} />
+              </div>
+            ))}
+          </div>
+        </div>
         ) : (
         <div className="space-y-2">
-          <div className="grid grid-cols-3 gap-1 rounded-md bg-white/5 p-1">
+          <div className="grid grid-cols-3 gap-1 rounded-md bg-ide-glass-surface p-1">
             {(["mode", "link", "joint"] as const).map((tab) => (
-              <IdeBarItem key={tab} tooltip={tab} text={tab === "mode" ? "Mode" : tab === "link" ? "Link" : "Joint"} side="bottom" isActive={physicsSubTab === tab} onClick={() => setPhysicsSubTab(tab)} className="h-6 justify-center px-1 text-[10px]" />
+              <IdeBarItem key={tab} tooltip={tab} text={tab === "mode" ? "Simulation" : tab === "link" ? "Links" : "Joints"} side="bottom" isActive={physicsSubTab === tab} onClick={() => setPhysicsSubTab(tab)} className="h-6 justify-center px-1 text-[10px]" />
             ))}
           </div>
 
           {physicsSubTab === "mode" && (
-            <div className="space-y-2 rounded-md border border-white/10 bg-white/5 p-2 text-[10px]">
+            <div className="space-y-2 rounded-md border border-ide-glass-border bg-ide-glass-surface p-2 text-[10px]">
               <p className="text-[9px] uppercase tracking-wider text-[var(--ide-text-inactive)]">Rapier simulation mode</p>
               <div className="grid grid-cols-2 gap-1">
                 <IdeBarItem tooltip="Pose driven by the jog sliders only" text="Kinematic" side="bottom" isActive={physicsMode === "kinematic"} onClick={() => setPhysicsMode("kinematic")} className="h-6 justify-center px-1 text-[10px]" />
@@ -605,9 +618,9 @@ export const RealThreeJsViewer = () => {
           )}
 
           {physicsSubTab === "link" && (
-            <div className="space-y-2 rounded-md border border-white/10 bg-white/5 p-2 text-[10px]">
+            <div className="space-y-2 rounded-md border border-ide-glass-border bg-ide-glass-surface p-2 text-[10px]">
               <label className="block text-[9px] uppercase tracking-wider text-[var(--ide-text-inactive)]">Link
-                <select value={selectedLinkName ?? ""} onChange={(event) => setSelectedKinematicNode({ kind: "link", name: event.target.value })} className="mt-1 h-7 w-full rounded border border-white/10 bg-black/20 px-1 text-[11px] text-[var(--foreground)] outline-none">
+                <select value={selectedLinkName ?? ""} onChange={(event) => setSelectedKinematicNode({ kind: "link", name: event.target.value })} className="mt-1 h-7 w-full rounded border border-ide-glass-border bg-ide-glass-input px-1 text-[11px] text-[var(--foreground)] outline-none">
                   {loadedOrd?.links.map((link) => <option key={link.name} value={link.name}>{link.name}</option>)}
                 </select>
               </label>
@@ -634,9 +647,9 @@ export const RealThreeJsViewer = () => {
           )}
 
           {physicsSubTab === "joint" && (
-            <div className="space-y-2 rounded-md border border-white/10 bg-white/5 p-2 text-[10px]">
+            <div className="space-y-2 rounded-md border border-ide-glass-border bg-ide-glass-surface p-2 text-[10px]">
               <label className="block text-[9px] uppercase tracking-wider text-[var(--ide-text-inactive)]">Joint
-                <select value={selectedJointName ?? ""} onChange={(event) => setSelectedKinematicNode({ kind: "joint", name: event.target.value })} className="mt-1 h-7 w-full rounded border border-white/10 bg-black/20 px-1 text-[11px] text-[var(--foreground)] outline-none">
+                <select value={selectedJointName ?? ""} onChange={(event) => setSelectedKinematicNode({ kind: "joint", name: event.target.value })} className="mt-1 h-7 w-full rounded border border-ide-glass-border bg-ide-glass-input px-1 text-[11px] text-[var(--foreground)] outline-none">
                   {loadedOrd?.joints.filter((joint) => joint.type !== "fixed").map((joint) => <option key={joint.name} value={joint.name}>{joint.name}</option>)}
                 </select>
               </label>
@@ -680,6 +693,7 @@ export const RealThreeJsViewer = () => {
         </div>
         )}
       </div>
+      </div>
       <Canvas camera={{ position:[2.5,2,2.5], fov: 45, up: [0, 0, 1] }} onCreated={({ camera }) => {
         camera.up.set(0, 0, 1)
         camera.lookAt(0, 0, 0)
@@ -715,20 +729,20 @@ export const RealThreeJsViewer = () => {
             jointValues={jointValues}
             linearPosition={linearPosition}
             tcpOffset={tcpOffset}
-            checkMode={checkMode}
-            isMoving={isMoving}
+            showTcpFrame={showTcpFrame}
             showCollisionBody={showCollisionBody}
             showVisual={showVisual}
             physicsMode={physicsMode}
-            totalMass={totalMass}
             onSelfCollision={setSelfCollision}
             onPhysicsCollision={setPhysicsCollision}
           />
         </Physics>
-        {checkMode && <mesh position={[0, 0, 1]}>
-          <boxGeometry args={[2, 2, 2]} />
-          <meshBasicMaterial color={primaryColor} wireframe transparent opacity={0.2} />
-        </mesh>}
+        {checkMode && loadedOrd && <group
+          position={[linearPosition.X / 1000, linearPosition.Y / 1000, linearPosition.Z / 1000]}
+          rotation={[(linearPosition.RX * Math.PI) / 180, (linearPosition.RY * Math.PI) / 180, (linearPosition.RZ * Math.PI) / 180, "ZYX"]}
+        >
+          <ReachEnvelope ord={loadedOrd} tcpOffset={tcpOffset} color={primaryColor} />
+        </group>}
         <MeasurementGrid borderColor={borderColor} primaryColor={primaryColor} />
         <OriginIndicator />
         <OrbitControls

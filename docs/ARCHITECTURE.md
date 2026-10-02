@@ -9,27 +9,26 @@ For setup/run instructions, see the root [README.md](../README.md).
 ```mermaid
 flowchart LR
     subgraph Client["Browser"]
-        FE["ONS frontend\nnew_React/ONS\nReact + Vite + Zustand + TanStack Query"]
+    FE["ONS frontend\nnew_React/ONS\nReact + Vite + Zustand + TanStack Query"]
     end
 
     subgraph Server["ONSBackend\nnew_React/ONSBackend"]
-        HTTP["Express HTTP API\n/api/*"]
-        WSFILES["WebSocket\n/ws/files"]
-        WSTERM["WebSocket\n/ws/terminal"]
-        PTY["node-pty shell\nper project, per socket"]
+    HTTP["Express REST API\nJWT-protected /api/*"]
+    WSFILES["File notifications\n/ws/files"]
+    WSTERM["Terminal stream\n/ws/terminal"]
+    PTY["node-pty shell\nper project socket"]
     end
 
     PG[("PostgreSQL\nusers / projects / file_nodes\ndevices / robot_library_entries")]
-    DISK[("Local disk storage\nSTORAGE_ROOT\nfile contents, meshes, .ord docs")]
+  DISK[("Local storage provider\nproject files, robot meshes, URDF, .ord")]
 
-    FE -- "REST (fetch + JWT)" --> HTTP
-    FE <-- "live file-tree sync" --> WSFILES
-    FE <-- "terminal input/output" --> WSTERM
-    WSTERM --> PTY
-    PTY -- "cwd: STORAGE_ROOT/projectId" --> DISK
-    HTTP --> PG
-    HTTP --> DISK
-    WSFILES --> HTTP
+  FE <-->|"REST (JWT)"| HTTP
+  FE <-->|"ticketed change events"| WSFILES
+  FE <-->|"ticketed input/output"| WSTERM
+  WSTERM --> PTY --> DISK
+  HTTP <--> PG
+  HTTP <--> DISK
+  HTTP -. "planned generated artifacts / deployment" .-> CTRL["Future controller gateway\nLinux + FPGA"]
 ```
 
 - **Metadata** (users, projects, folder/file names and tree structure,
@@ -44,6 +43,9 @@ flowchart LR
 - The **terminal WebSocket** (`/ws/terminal`) is different: it's a live,
   bidirectional byte stream to a real shell process (`node-pty`), not a
   notification channel — see [2.6](#26-terminal-sessions).
+- The compiler/controller path is **not implemented**. The frontend's robot
+  viewer is a local visualization and simplified physics preview, not a live
+  connection to a physical controller.
 
 
 ## 2. Backend (`new_React/ONSBackend`)
@@ -55,9 +57,9 @@ same layering:
 
 ```mermaid
 flowchart LR
-    ROUTE["*.routes.ts\nExpress Router + Swagger JSDoc"]
-    VALIDATE["validate.middleware.ts\nzod schema parse"]
-    AUTH["auth.middleware.ts\nrequireAuth (JWT)"]
+  ROUTE["*.routes.ts\nExpress Router + Swagger JSDoc"]
+  AUTH["auth.middleware.ts\nrequireAuth (JWT; not signup/login)"]
+  VALIDATE["validate.middleware.ts\nZod params/query/body parse"]
     CTRL["*.controller.ts\nreq/res glue"]
     SVC["*.service.ts\nbusiness logic"]
     REPO["*.repository.ts\nDrizzle queries"]
@@ -71,7 +73,7 @@ flowchart LR
 
 - [app.ts](../new_React/ONSBackend/src/app.ts) wires up Helmet, CORS, JSON
   body parsing, request logging (`pino-http`), rate limiting on `/api/auth`,
-  the three route groups, Swagger UI (`/api-docs`), and the error middleware
+  the API route groups, Swagger UI (`/api-docs`), and the error middleware
   last.
 - [server.ts](../new_React/ONSBackend/src/server.ts) creates the HTTP server
   from `createApp()` and attaches the WebSocket server to the same server
@@ -97,6 +99,7 @@ flowchart LR
 | `files` | [modules/files/files.routes.ts](../new_React/ONSBackend/src/modules/files/files.routes.ts) | File-tree CRUD and file content read/write, mounted under `/api/projects/:projectId/files` |
 | `devices` | [modules/devices/devices.routes.ts](../new_React/ONSBackend/src/modules/devices/devices.routes.ts) | Add/list/remove a project's robot/PLC/HMI devices; scaffolds each device's folder subtree, mounted under `/api/projects/:projectId/devices` |
 | `robots` | [modules/robots/robotLibrary.routes.ts](../new_React/ONSBackend/src/modules/robots/robotLibrary.routes.ts) | `.ord` schema, URDF import/derivation, and the reusable robot library (`/api/robot-library`) |
+| `git` | [modules/git/git.routes.ts](../new_React/ONSBackend/src/modules/git/git.routes.ts) | Project mirror status, stage/unstage/discard, commits, history, branches, and reset |
 
 All routes except signup/login require `requireAuth`
 ([middlewares/auth.middleware.ts](../new_React/ONSBackend/src/middlewares/auth.middleware.ts)),
@@ -109,15 +112,17 @@ decoded payload to `req.user`.
 sequenceDiagram
     participant FE as Frontend
     participant API as Express API
-    participant WS as WebSocket server
+  participant WS as WebSocket server
+  participant GW as File or terminal gateway
 
     FE->>API: POST /api/auth/login {email, password}
     API-->>FE: { token, user }
     FE->>API: GET /api/auth/ws-ticket (Bearer token)
     API-->>FE: { ticket }
-    FE->>WS: connect /ws/files?ticket=...&projectId=...
+  FE->>WS: connect /ws/files or /ws/terminal?ticket=...&projectId=...
     WS->>WS: verifyWsTicket(ticket)
-    WS-->>FE: connection accepted, joined projectId room
+  WS->>GW: route by WebSocket path
+  GW-->>FE: accept connection for project
 ```
 
 The JWT used for REST calls is never sent to the WebSocket endpoint directly;
@@ -138,17 +143,19 @@ defines the notification message shape (`file:create` / `file:update` /
 
 ```mermaid
 flowchart LR
-    CTRL["files.controller.ts"] --> SVC["files.service.ts"]
-    SVC --> REPO["files.repository.ts\n(file_nodes rows)"]
-    SVC --> STORE["StorageProvider interface\nstorage/storage.interface.ts"]
-    STORE --> LOCAL["localStorage.provider.ts\nwrites under STORAGE_ROOT"]
+  CTRL["files.controller.ts"] --> SVC["files.service.ts"]
+  SVC <--> REPO["files.repository.ts\nfile_nodes metadata"]
+  SVC <--> STORE["StorageProvider interface\nread / write / delete"]
+  STORE --> LOCAL["Local disk provider\nSTORAGE_ROOT"]
+  REPO --> PG[("PostgreSQL")]
+  SVC -. "file change event" .-> WS["/ws/files"]
 ```
 
 `file_nodes` rows hold metadata and a `storageKey`; the actual bytes are
 written/read through the
-[StorageProvider interface](../new_React/ONSBackend/src/storage/storage.interface.ts),
+[StorageProvider interface](../new_React/ONSBackend/src/storageLib/storage.interface.ts),
 currently implemented by
-[localStorage.provider.ts](../new_React/ONSBackend/src/storage/localStorage.provider.ts).
+[localStorage.provider.ts](../new_React/ONSBackend/src/storageLib/localStorage.provider.ts).
 To swap in a different backing store (e.g. S3), implement the same interface
 and change what `files.service.ts` imports — no route/controller changes
 needed.
@@ -157,23 +164,19 @@ needed.
 
 ```mermaid
 flowchart LR
-    UPLOAD["multipart upload\nurdf + meshes, or a ready .ord"]
-    RESOLVE["ordUpload.helper.ts\nresolveOrdFromUpload()"]
-    URDF["urdfImport.service.ts\nparseUrdfToOrd()"]
-    MATH["kinematicsMath.ts\nDH / screw axis / dual quaternion"]
-    ORD["ord.schema.ts\nzod-validated .ord document"]
-    SCAFFOLD["deviceScaffold.service.ts\nbuilds the device's file_nodes subtree"]
-    LIB[("robot_library_entries")]
-    DEV[("devices")]
-    TREE[("file_nodes\nvisual/collision meshes, source urdf, *.ord")]
-
-    UPLOAD --> RESOLVE
-    RESOLVE -->|"urdf + meshes"| URDF --> MATH --> ORD
-    RESOLVE -->|"ready .ord"| ORD
-    ORD --> SCAFFOLD
-    SCAFFOLD --> DEV
-    SCAFFOLD --> TREE
-    ORD -.->|"or: clone from library"| LIB
+  UPLOAD["URDF + meshes, or ready .ord"] --> RESOLVE["ordUpload.helper.ts"]
+  RESOLVE -->|"URDF"| IMPORT["urdfImport.service.ts\nparse links, joints, inertials, mesh refs"]
+  IMPORT --> MATH["kinematicsMath.ts\nDH / screw axes / base pose"]
+  MATH --> ORD["ord.schema.ts\nvalidated .ord document"]
+  RESOLVE -->|"existing .ord"| ORD
+  ORD --> SCAFFOLD["deviceScaffold.service.ts\ncreate device tree and store assets"]
+  SCAFFOLD --> DEV[("devices")]
+  SCAFFOLD --> TREE[("file_nodes + local bytes\nURDF / meshes / .ord")]
+  ORD -. "publish or clone" .-> LIB[("robot_library_entries")]
+  LIB -. "clone into project storage" .-> SCAFFOLD
+  TREE --> VIEW["Frontend 3D viewer\nvisual mesh + collision mesh"]
+  VIEW --> DETECT["BVH triangle checks\nself / ground status"]
+  VIEW --> HULL["Rapier convex hulls\nsimplified rigid-body contact"]
 ```
 
 - **`.ord`** (ONS Robot Description) is a JSON document — not a hand-authored
@@ -226,7 +229,7 @@ sequenceDiagram
     FE->>API: GET /api/auth/ws-ticket (Bearer token)
     API-->>FE: { ticket }
     FE->>WS: connect /ws/terminal?ticket=...&projectId=...
-    WS->>PTY: spawn(shell, { cwd: STORAGE_ROOT/projectId })
+    WS->>PTY: spawn(shell, { cwd: project storage directory })
     loop while connected
         FE->>WS: { type: "input", data }
         WS->>PTY: shell.write(data)
@@ -249,6 +252,7 @@ is no reconnect/replay of scrollback — closing the terminal ends the shell.
 
 ```mermaid
 erDiagram
+  %% Git mirror data is maintained on disk under git-workdir, not in PostgreSQL tables.
     USERS ||--o{ PROJECTS : owns
     USERS ||--o{ ROBOT_LIBRARY_ENTRIES : owns
     PROJECTS ||--o{ FILE_NODES : contains
@@ -326,12 +330,15 @@ flowchart TB
     QC --> GATE["features/auth/components/AuthGate.tsx"]
     GATE -->|"not authenticated"| LOGIN["features/auth/components/LoginScreen.tsx"]
     GATE -->|"authenticated"| SHELL["features/ide-shell/components/IdeLayout.tsx"]
-    SHELL --> NAV["IdeNavRail / IdeHeader / IdeFooter"]
-    SHELL --> MODAL["NewProjectModal.tsx\n(glassmorphism dialog)"]
+    SHELL --> NAV["IdeNavRail / IdeHeader / IdeFooter\ntheme-aware shared shell"]
+    SHELL --> MODAL["NewProjectModal.tsx\nproject + device setup"]
     SHELL --> WORK["IdeWorkspace / WorkspaceCanvas"]
-    WORK --> EDITORS["features/editor/components\nMonacoEditor, GraphEditor,\nDataBlockEditor, HmiEditor, ConfigEditor"]
-    WORK --> SIM["features/simulation\n3D viewer (R3F / Three.js)"]
-    WORK --> CONSOLE["features/console\nxterm.js terminal (useTerminal + /ws/terminal)"]
+    WORK --> EDITORS["Editor features\nMonaco, Graph, Data Block, HMI, Config"]
+    WORK --> SIM["Robot control\nJog / View / Physics tabs"]
+    SIM --> MODEL[".ord meshes + kinematic scene"]
+    SIM --> COLLISION["BVH status checks\nRapier hull preview"]
+    WORK --> GIT["Source control\nbackend Git mirror API"]
+    WORK --> CONSOLE["xterm.js terminal\nuseTerminal + /ws/terminal"]
 ```
 
 `AuthGate` reads `useAuthStore` and renders `LoginScreen` until a token/user is
@@ -344,7 +351,7 @@ robot/PLC/HMI devices in one flow.
 
 | Folder | Purpose |
 | --- | --- |
-| [core/api](../new_React/ONS/src/core/api) | Typed HTTP clients (`authApi.ts`, `projectsApi.ts`, `filesApi.ts`, `devicesApi.ts`, `robotLibraryApi.ts`) built on a shared [httpClient.ts](../new_React/ONS/src/core/api/httpClient.ts) (`apiRequest<T>`) that attaches the JWT from `authStore`, resolves the backend origin via [resolveBackendUrl.ts](../new_React/ONS/src/core/api/resolveBackendUrl.ts), and supports `FormData` bodies for multipart uploads |
+| [core/api](../new_React/ONS/src/core/api) | Typed HTTP clients (`authApi.ts`, `projectsApi.ts`, `filesApi.ts`, `devicesApi.ts`, `gitApi.ts`, `robotLibraryApi.ts`) built on a shared [httpClient.ts](../new_React/ONS/src/core/api/httpClient.ts) (`apiRequest<T>`) that attaches the JWT from `authStore`, resolves the backend origin via [resolveBackendUrl.ts](../new_React/ONS/src/core/api/resolveBackendUrl.ts), and supports `FormData` bodies for multipart uploads |
 | [core/socket](../new_React/ONS/src/core/socket) | [useFileSyncSocket.ts](../new_React/ONS/src/core/socket/useFileSyncSocket.ts): fetches a WS ticket, opens `/ws/files`, and invalidates the `["file-tree", projectId]` query on any message |
 | [core/store](../new_React/ONS/src/core/store) | Zustand stores, one per concern: `authStore`, `ideStore` (incl. the New Project modal's open state), `layoutStore`, `menuStore`, `projectStore`, `robotSimulationStore`, `sourceControlStore`, `themeStore`, `workspaceStore` |
 
@@ -358,14 +365,16 @@ add a function to the relevant `core/api/*Api.ts` file rather than calling
 sequenceDiagram
     participant A as Client A (editor)
     participant API as Express API
-    participant WS as WebSocket /ws/files
+    participant SVC as File service
+    participant WS as fileSync.gateway.ts
     participant B as Client B (same project)
 
     A->>API: PUT /api/projects/:id/files/:fileId/content
-    API->>API: files.service.writeContent (DB + disk)
+    API->>SVC: files.service.writeContent
+    SVC->>SVC: Persist bytes and file metadata
     API-->>A: 200 OK
-    Note over API,WS: (broadcast wiring point - see fileSync.gateway.ts)
-    WS-->>B: file:update notification
+    SVC->>WS: Broadcast file:update to project room
+    WS-->>B: file:update notification only
     B->>B: queryClient.invalidateQueries(["file-tree", projectId])
     B->>API: GET /api/projects/:id/files (refetch)
 ```
@@ -379,17 +388,25 @@ validation/authorization path for every read.
 
 ```mermaid
 sequenceDiagram
-    participant UI as TerminalView.tsx
-    participant HOOK as useTerminal.ts
-    participant WS as /ws/terminal
+  participant UI as TerminalView.tsx
+  participant HOOK as useTerminal.ts
+  participant API as Auth API
+  participant WS as terminal.gateway.ts
+  participant PTY as node-pty shell
 
     UI->>HOOK: useTerminal(activeProjectId)
     HOOK->>HOOK: useXTerm() creates the xterm.js instance + FitAddon
-    HOOK->>WS: connect /ws/terminal?ticket=...&projectId=...
-    HOOK->>WS: { type: "resize", cols, rows } (on open + ResizeObserver)
+  HOOK->>API: GET /api/auth/ws-ticket (Bearer JWT)
+  API-->>HOOK: short-lived ticket
+  HOOK->>WS: connect /ws/terminal?ticket=...&projectId=...
+  WS->>PTY: spawn shell for project storage cwd
+  WS-->>HOOK: socket accepted; initial PTY output
+  HOOK->>WS: { type: "resize", cols, rows }
     loop user types
         HOOK->>WS: { type: "input", data } (xterm onData)
-        WS-->>HOOK: { type: "output", data }
+    WS->>PTY: write input
+    PTY-->>WS: output bytes
+    WS-->>HOOK: { type: "output", data }
         HOOK->>HOOK: instance.write(data)
     end
 ```
@@ -410,8 +427,29 @@ session persistence across remounts or page reloads.
 | `features/auth` | Login screen, `AuthGate` |
 | `features/ide-shell` | Overall IDE layout, nav rail, header/footer, file tree ([features/ide-shell/file-tree](../new_React/ONS/src/features/ide-shell/file-tree)) with inline add/rename, source control panel, `NewProjectModal` |
 | `features/editor` | Monaco (ST/SCL text), graph editor (LD/FBD), data block editor, HMI editor, `ConfigEditor` (hardware/software config, TIA Portal-style tabs) |
-| `features/simulation` | 3D viewport (React Three Fiber / URDF / Rapier) |
+| `features/simulation` | `.ord` robot scene, joint jog, reach estimate, BVH collision status, and simplified Rapier contact preview |
 | `features/console` | Real terminal: `xterm.js` wired to a per-project PTY shell over `/ws/terminal` |
+
+### 4.6 Robot viewer data path
+
+```mermaid
+flowchart LR
+  QUERY["TanStack Query\nrobot device + .ord"] --> MESHAPI["Authenticated mesh API"]
+  MESHAPI --> VIS["Visual DAE / OBJ / GLTF"]
+  MESHAPI --> COL["Collision STL / mesh"]
+  VIS --> SCENE["buildOrdRobotGroups\nlink / joint hierarchy"]
+  JOINTS["Joint targets\nvelocity-limited kinematic pose"] --> SCENE
+  SCENE --> DRAW["Three.js visible robot"]
+  SCENE --> TCP["TCP transform + optional sampled reach envelope"]
+  COL --> BVH["BVH triangle tests\nself-collision + ground status"]
+  COL --> HULL["Per-link convex hulls\nRapier single-body dynamics"]
+```
+
+Visual and collision assets are loaded separately. The reach envelope samples
+joint-limited TCP positions and takes a convex hull; it is not a collision-free
+reachable volume. Collision status uses mesh triangles, while Rapier contact
+uses convex hull approximations. Dynamic mode currently treats the assembled
+robot as one rigid body rather than simulating articulated joints.
 
 ## 5. Adding a feature — checklist
 

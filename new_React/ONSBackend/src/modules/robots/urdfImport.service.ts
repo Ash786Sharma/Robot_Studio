@@ -30,6 +30,34 @@ function parseVec3(value: string | undefined): Vec3 {
   return [parts[0], parts[1], parts[2]];
 }
 
+function rotateInertiaToLinkFrame(
+  inertia: [number, number, number, number, number, number],
+  rpy: Vec3,
+): [number, number, number, number, number, number] {
+  const [roll, pitch, yaw] = rpy;
+  const cr = Math.cos(roll), sr = Math.sin(roll);
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const rotation = [
+    [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
+    [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr],
+    [-sp, cp * sr, cp * cr],
+  ];
+  const tensor = [
+    [inertia[0], inertia[3], inertia[4]],
+    [inertia[3], inertia[1], inertia[5]],
+    [inertia[4], inertia[5], inertia[2]],
+  ];
+  const rotated = Array.from({ length: 3 }, (_, row) => Array.from({ length: 3 }, (_, column) => {
+    let value = 0;
+    for (let i = 0; i < 3; i += 1) {
+      for (let j = 0; j < 3; j += 1) value += rotation[row][i] * tensor[i][j] * rotation[column][j];
+    }
+    return value;
+  }));
+  return [rotated[0][0], rotated[1][1], rotated[2][2], rotated[0][1], rotated[0][2], rotated[1][2]];
+}
+
 function asArray<T>(value: T | T[] | undefined): T[] {
   if (value === undefined) return [];
   return Array.isArray(value) ? value : [value];
@@ -54,7 +82,7 @@ interface RawLink {
   "@_name": string;
   inertial?: {
     mass?: { "@_value"?: string };
-    origin?: { "@_xyz"?: string };
+    origin?: { "@_xyz"?: string; "@_rpy"?: string };
     inertia?: Record<string, string | undefined>;
   };
   visual?: RawGeometryHolder | RawGeometryHolder[];
@@ -162,19 +190,20 @@ export function parseUrdfToOrd(xml: string, sourceStorageKey: string, resolveMes
     const parentJoint = rawJoints.find((j) => j.child["@_link"] === link["@_name"]);
     const inertial = link.inertial;
     const inertia = inertial?.inertia ?? {};
+    const inertiaTensor: [number, number, number, number, number, number] = [
+      Number(inertia["@_ixx"] ?? 0),
+      Number(inertia["@_iyy"] ?? 0),
+      Number(inertia["@_izz"] ?? 0),
+      Number(inertia["@_ixy"] ?? 0),
+      Number(inertia["@_ixz"] ?? 0),
+      Number(inertia["@_iyz"] ?? 0),
+    ];
     return {
       name: link["@_name"],
       parent: parentJoint ? parentJoint.parent["@_link"] : null,
       mass: Number(inertial?.mass?.["@_value"] ?? 0),
       centerOfMass: parseVec3(inertial?.origin?.["@_xyz"]),
-      inertia: [
-        Number(inertia["@_ixx"] ?? 0),
-        Number(inertia["@_iyy"] ?? 0),
-        Number(inertia["@_izz"] ?? 0),
-        Number(inertia["@_ixy"] ?? 0),
-        Number(inertia["@_ixz"] ?? 0),
-        Number(inertia["@_iyz"] ?? 0),
-      ],
+      inertia: rotateInertiaToLinkFrame(inertiaTensor, parseVec3(inertial?.origin?.["@_rpy"])),
     };
   });
 

@@ -1,39 +1,34 @@
 flowchart LR
-    subgraph Frontend["ONS React frontend"]
-        G["GraphEditor\nLD / FBD JSON"]
-        S["MonacoEditor\nSCL / ST text"]
-        D["DataBlockEditor\nDB JSON"]
-        H["HmiEditor\nHMI JSON"]
+    subgraph Current["Current application"]
+        G["Graph editor\nlocal LD / FBD state"]
+        S["Monaco editor\ntext editing"]
+        D["Data block editor"]
+        H["HMI editor"]
+        API["ONSBackend\nprojects / files / devices / Git / .ord"]
+        G -. "persist file content" .-> API
+        S -. "persist file content" .-> API
+        D -. "persist file content" .-> API
+        H -. "persist file content" .-> API
     end
 
-    API["ONSBackend\nPOST /api/projects/:id/build"]
+    subgraph Planned["Proposed compiler pipeline (not implemented)"]
+        PARSE["Parsers and editor adapters"]
+        IR["Common intermediate representation\nPOUs / types / networks / source spans"]
+        CHECK["Semantic and safety validation"]
+        PLCOPEN["PLCOpen XML serializer"]
+        MATIEC["matiec\nIEC 61131-3 to C"]
+        PLCGEN["PLC target code generation"]
+        ROBOTGEN["Robot C/C++ code generation"]
+        HMIGEN["HMI resource code generation"]
+        ARTIFACT["Versioned build artifact\ncode / manifest / diagnostics"]
+        GATEWAY["Future controller gateway"]
+        CTRL["Linux + FPGA controller"]
 
-    subgraph Compiler["Compiler service / worker"]
-        PARSE["Parsers and\neditor adapters"]
-        IR["Common IR\nPOUs, types, networks, source spans"]
-        CHECK["Semantic validation\nlimits, types, safety rules"]
-        PLCOPEN["PLCOpen XML\nserializer"]
-        PLCGEN["PLC codegen"]
-        ROBOTGEN["Robot C/C++\ncodegen"]
-        HMIGEN["HMI C/C++\nresource codegen"]
+        PARSE --> IR --> CHECK
+        CHECK --> PLCOPEN --> MATIEC --> PLCGEN --> ARTIFACT
+        CHECK --> ROBOTGEN --> ARTIFACT
+        CHECK --> HMIGEN --> ARTIFACT
+        ARTIFACT --> GATEWAY --> CTRL
     end
 
-    MATIEC["matiec\nIEC 61131-3 -> C"]
-    ARTIFACT["Build artifact\nC/C++ + manifest + diagnostics\nchecksums + source maps"]
-    GATEWAY["Controller gateway\nvalidate / deploy"]
-    CONTROLLER["Linux + FPGA controller"]
-
-    G --> API
-    S --> API
-    D --> API
-    H --> API
-    API --> PARSE --> IR --> CHECK
-    CHECK --> PLCOPEN --> MATIEC --> PLCGEN
-    CHECK --> ROBOTGEN
-    CHECK --> HMIGEN
-    PLCGEN --> ARTIFACT
-    ROBOTGEN --> ARTIFACT
-    HMIGEN --> ARTIFACT
-    ARTIFACT --> GATEWAY --> CONTROLLER
-    CHECK -. diagnostics + source spans .-> API
-    API -. diagnostics .-> Frontend
+    Current -. "future build integration; no current build API" .-> PARSE

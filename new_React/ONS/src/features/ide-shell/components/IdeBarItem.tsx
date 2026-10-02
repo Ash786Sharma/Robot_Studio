@@ -69,7 +69,7 @@ export function IdeBarItem({
       <TooltipContent 
         side={side} 
         sideOffset={6} 
-        className="flex items-center gap-2 py-2.5 min-h-9 in-[.theme-dracula_&]:[--border:#44475a]"
+        className="flex items-center gap-2 py-2.5 min-h-9"
       >
         <span className="font-medium tracking-wide text-xs">{tooltip}</span>
         
@@ -77,7 +77,7 @@ export function IdeBarItem({
           <KbdGroup className="flex items-center gap-0.5 ml-1">
             {shortcutKeys.map((key, index) => (
               <span key={`${key}-${index}`} className="flex items-center gap-0.5">
-                <Kbd className="pointer-events-none inline-flex h-4.5 select-none items-center gap-1 rounded border border-ide-kbd-border bg-ide-kbd px-1.5 font-mono text-[10px] font-semibold text-ide-inactive shadow-[0_1px_0_rgba(0,0,0,0.1)]">
+                <Kbd className="pointer-events-none inline-flex h-4.5 select-none items-center gap-1 rounded border border-ide-kbd-border bg-ide-kbd px-1.5 font-mono text-[10px] font-semibold text-ide-inactive shadow-[0_1px_0_var(--ide-tooltip-shadow)]">
                   {key}
                 </Kbd>
                 {index < shortcutKeys.length - 1 && (

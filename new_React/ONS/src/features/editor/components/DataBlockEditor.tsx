@@ -155,7 +155,7 @@ export const DataBlockEditor = ({ fileName, showChanges, onShowChangesChange }: 
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row) => <tr key={row.id} className={`group hover:bg-[var(--ide-item-hover)] ${isShowingChanges && isChanged(row.original) ? "bg-amber-500/10" : ""}`}>{row.getVisibleCells().map((cell) => <td key={cell.id} className="border-b border-[var(--border)]/60 px-3 py-1.5">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}</tr>)}
+            {table.getRowModel().rows.map((row) => <tr key={row.id} className={`group hover:bg-[var(--ide-item-hover)] ${isShowingChanges && isChanged(row.original) ? "bg-status-warning/10" : ""}`}>{row.getVisibleCells().map((cell) => <td key={cell.id} className="border-b border-[var(--border)]/60 px-3 py-1.5">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>)}</tr>)}
           </tbody>
         </table>
       </div>
